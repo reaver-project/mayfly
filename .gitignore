@@ -1,0 +1,6 @@
+*~
+*.o
+mayfly-test
+*.kate-swp
+*.d
+*.so
