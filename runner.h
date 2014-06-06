@@ -45,7 +45,8 @@ namespace reaver
         class runner
         {
         public:
-            runner(std::size_t threads = 1, std::string test_name = "") : _threads{ threads }, _test_name{ std::move(test_name) }
+            runner(std::size_t threads = 1, std::string suite_name = "", std::string test_name = "") : _threads{ threads }, _suite_name{ std::move(suite_name) },
+                _test_name{ std::move(test_name) }
             {
             }
 
@@ -70,6 +71,7 @@ namespace reaver
             std::size_t _threads = 1;
             std::size_t _limit = 0;
 
+            std::string _suite_name;
             std::string _test_name;
 
             std::atomic<std::uintmax_t> _tests{};
@@ -81,8 +83,8 @@ namespace reaver
         class subprocess_runner : public runner
         {
         public:
-            subprocess_runner(std::string executable, std::size_t threads = 1, std::string test_name = "") : runner{ threads, std::move(test_name) },
-                _executable{ std::move(executable) }
+            subprocess_runner(std::string executable, std::size_t threads = 1, std::string suite = "", std::string test_name = "") : runner{ threads, std::move(suite),
+                std::move(test_name) }, _executable{ std::move(executable) }
             {
             }
 
@@ -92,17 +94,32 @@ namespace reaver
                 {
                     for (const auto & s : suites)
                     {
+                        if (s.name() != _suite_name)
+                        {
+                            continue;
+                        }
+
                         for (const auto & test : s)
                         {
                             if (test.name() == _test_name)
                             {
-                                auto result = _run_test(test, rep);
+                                auto result = _run_test(test, s, rep);
                                 std::cout << static_cast<std::uintmax_t>(result.status) << " " << result.description << std::flush;
+
+                                ++_tests;
+
+                                if (result.status == testcase_status::passed)
+                                {
+                                    ++_passed;
+                                }
 
                                 return;
                             }
                         }
                     }
+
+                    std::cout << static_cast<std::uintmax_t>(testcase_status::not_found) << std::flush;
+                    return;
                 }
 
                 for (const auto & s : suites)
@@ -118,7 +135,7 @@ namespace reaver
 
                             pool.push([&]()
                             {
-                                auto result = _run_test(test, rep);
+                                auto result = _run_test(test, s, rep);
 
                                 if (result.status == testcase_status::passed)
                                 {
@@ -127,7 +144,7 @@ namespace reaver
 
                                 else
                                 {
-                                    _failed.push_back(std::make_pair(result.status, s.name() + " / " + test.name()));
+                                    _failed.push_back(std::make_pair(result.status, s.name() + "/" + test.name()));
                                 }
                             });
                         }
@@ -140,7 +157,7 @@ namespace reaver
         private:
             std::string _executable;
 
-            testcase_result _run_test(const testcase & t, const reporter & rep) const
+            testcase_result _run_test(const testcase & t, const suite & s, const reporter & rep) const
             {
                 testcase_result result;
                 result.name = t.name();
@@ -169,7 +186,7 @@ namespace reaver
                 {
                     using namespace boost::process::initializers;
 
-                    std::vector<std::string> args{ _executable, "--test", t.name(), "-q" };
+                    std::vector<std::string> args{ _executable, "--test", s.name() + "/" + t.name(), "-q" };
 
                     boost::process::pipe p = boost::process::create_pipe();
 
@@ -246,6 +263,15 @@ namespace reaver
         }
 
         constexpr const char * version_string = "Reaver Project's Mayfly v0.0.1 dev\nCopyright © 2014 Reaver Project Team\n";
+
+        class invalid_testcase_name_format : public exception
+        {
+        public:
+            invalid_testcase_name_format(const std::string & test_name) : exception{ reaver::logger::error }
+            {
+                *this << "invalid testcase name format - proper format is `suite/testcase`.";
+            }
+        };
 
         inline int run(const std::vector<suite> & suites, int argc, char ** argv)
         {
@@ -325,8 +351,30 @@ namespace reaver
                 reps.emplace_back(std::cref(*reporter_registry().at(elem)));
             }
 
+            std::string suite;
+            if (!test_name.empty() && test_name.find('/') == std::string::npos)
+            {
+                if (!variables.count("quiet"))
+                {
+                    throw invalid_testcase_name_format{ test_name };
+                }
+
+                else
+                {
+                    std::cout << static_cast<std::uintmax_t>(testcase_status::not_found) << std::flush;
+                    return 1;
+                }
+            }
+
+            if (!test_name.empty())
+            {
+
+                suite = test_name.substr(0, test_name.find('/'));
+                test_name = test_name.substr(test_name.find('/') + 1);
+            }
+
             auto && reporter = combine(reps);
-            default_runner(std::make_unique<subprocess_runner>(executable, threads, test_name))(suites, reporter);
+            default_runner(std::make_unique<subprocess_runner>(executable, threads, suite, test_name))(suites, reporter);
             default_runner().summary(reporter);
 
             if (default_runner().passed() == default_runner().total())

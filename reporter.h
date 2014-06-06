@@ -31,6 +31,8 @@
 
 #include <reaver/exception.h>
 
+#include "detail/helpers.h"
+
 namespace reaver
 {
     namespace mayfly { inline namespace _v1
@@ -150,9 +152,6 @@ namespace reaver
         };
     }}
 }
-
-#define MAYFLY_DETAIL_UNIQUE_NAME_CAT(file, line) _mayfly_ ## file ## line
-#define MAYFLY_DETAIL_UNIQUE_NAME MAYFLY_DETAIL_UNIQUE_NAME_CAT(__FILE__, __LINE__)
 
 #define MAYFLY_REPORTER_REGISTER(name, ...)                                                                  \
     namespace { static ::reaver::mayfly::reporter_registrar MAYFLY_DETAIL_UNIQUE_NAME { name, new __VA_ARGS__() }; }

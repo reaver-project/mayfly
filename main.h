@@ -20,14 +20,30 @@
  *
  **/
 
-#include <reaver/mayfly/main.h>
+#pragma once
 
-MAYFLY_ADD_SUITE("foobar")
-MAYFLY_ADD_TESTCASE_TO("foobar", "foobaz", []() {})
+#include "../mayfly.h"
 
-MAYFLY_BEGIN_SUITE("foobaz")
-MAYFLY_ADD_TESTCASE("testcase 1", []() {})
-MAYFLY_ADD_TESTCASE("testcase 2", []() {})
-MAYFLY_END_SUITE
+int main(int argc, char ** argv) try
+{
+    return reaver::mayfly::run(reaver::mayfly::default_suite_registry(), argc, argv);
+}
 
-MAYFLY_ADD_TESTCASE_TO("foobaz", "lalala", []() {})
+catch (reaver::exception & e)
+{
+    e.print(reaver::logger::dlog);
+
+    if (e.level() == reaver::logger::crash)
+    {
+        return 2;
+    }
+
+    return 1;
+}
+
+catch (std::exception & e)
+{
+    reaver::logger::dlog(reaver::logger::crash) << e.what();
+
+    return 2;
+}

@@ -113,6 +113,12 @@ namespace reaver
                     reaver::logger::dlog();
                 }
 
+                if (!total)
+                {
+                    reaver::logger::dlog() << white << "No tests found.";
+                    return;
+                }
+
                 if (passed == total)
                 {
                     reaver::logger::dlog() << green << "All tests passed!";
