@@ -65,11 +65,11 @@ namespace reaver
                         break;
 
                     case testcase_status::failed:
-                        reaver::logger::dlog(reaver::logger::error) << "test failed: `" << result.name << "`.";
+                        reaver::logger::dlog(reaver::logger::error) << "test failed: `" << result.name << "`.\n" << "Reason: " << style::style() << result.description;
                         break;
 
                     case testcase_status::crashed:
-                        reaver::logger::dlog(reaver::logger::error) << "test crashed: `" << result.name << "`.";
+                        reaver::logger::dlog(reaver::logger::error) << "test crashed: `" << result.name << "`.\n" << "Reason: " << style::style() << result.description;
                         break;
 
                     default:

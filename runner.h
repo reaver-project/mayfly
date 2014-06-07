@@ -175,6 +175,20 @@ namespace reaver
                         result.status = testcase_status::passed;
                     }
 
+                    catch (reaver::exception & e)
+                    {
+                        std::ostringstream str;
+
+                        {
+                            reaver::logger::logger l{};
+                            l.add_stream(str);
+                            e.print(l);
+                        }
+
+                        result.status = testcase_status::failed;
+                        result.description = str.str();
+                    }
+
                     catch (std::exception & e)
                     {
                         result.status = testcase_status::failed;

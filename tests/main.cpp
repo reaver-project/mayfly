@@ -23,7 +23,8 @@
 #include <reaver/mayfly/main.h>
 
 MAYFLY_ADD_SUITE("foobar")
-MAYFLY_ADD_TESTCASE_TO("foobar", "foobaz", []() {})
+// MAYFLY_ADD_TESTCASE_TO("foobar", "foobaz", []() { throw std::runtime_error{ "hello world!" }; })
+// MAYFLY_ADD_TESTCASE_TO("foobar", "foozab", []() { throw reaver::exception() << "goodbye, cruel world!"; })
 
 MAYFLY_BEGIN_SUITE("foobaz")
 MAYFLY_ADD_TESTCASE("testcase 1", []() {})
