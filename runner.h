@@ -104,7 +104,7 @@ namespace reaver
                             if (test.name() == _test_name)
                             {
                                 auto result = _run_test(test, s, rep);
-                                std::cout << static_cast<std::uintmax_t>(result.status) << " " << result.description << std::flush;
+                                std::cout << static_cast<std::uintmax_t>(result.status) << ' ' << result.description << std::flush;
 
                                 ++_tests;
 
@@ -129,11 +129,13 @@ namespace reaver
                     {
                         thread_pool pool(_threads);
 
+                        std::vector<std::future<void>> futures;
+
                         for (const auto & test : s)
                         {
                             ++_tests;
 
-                            pool.push([&]()
+                            futures.push_back(pool.push([&]()
                             {
                                 auto result = _run_test(test, s, rep);
 
@@ -146,7 +148,12 @@ namespace reaver
                                 {
                                     _failed.push_back(std::make_pair(result.status, s.name() + "/" + test.name()));
                                 }
-                            });
+                            }));
+                        }
+
+                        for (auto & f : futures)
+                        {
+                            f.get();
                         }
                     }
 
@@ -216,18 +223,27 @@ namespace reaver
                     std::uintmax_t retval;
                     std::string message;
 
-                    is >> retval;
-                    std::getline(is, message);
-
-                    if (!is || retval > 3)
+                    try
                     {
-                        result.status = testcase_status::crashed;
+                        is >> retval;
+                        std::getline(is, message);
+                        message = message.substr(1);            // remove the leading space; thanks, b.iostreams for no .ignore()
+
+                        if (!is || retval > 3)
+                        {
+                            result.status = testcase_status::crashed;
+                        }
+
+                        else
+                        {
+                            result.status = static_cast<testcase_status>(retval);
+                            result.description = message;
+                        }
                     }
 
-                    else
+                    catch (...)
                     {
-                        result.status = static_cast<testcase_status>(retval);
-                        result.description = message;
+                        result.status = testcase_status::crashed;
                     }
                 }
 

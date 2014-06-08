@@ -22,13 +22,16 @@
 
 #include <reaver/mayfly/main.h>
 
-MAYFLY_ADD_SUITE("foobar")
-// MAYFLY_ADD_TESTCASE_TO("foobar", "foobaz", []() { throw std::runtime_error{ "hello world!" }; })
-// MAYFLY_ADD_TESTCASE_TO("foobar", "foozab", []() { throw reaver::exception() << "goodbye, cruel world!"; })
+MAYFLY_BEGIN_SUITE("basic tests");
 
-MAYFLY_BEGIN_SUITE("foobaz")
-MAYFLY_ADD_TESTCASE("testcase 1", []() {})
-MAYFLY_ADD_TESTCASE("testcase 2", []() {})
-MAYFLY_END_SUITE
+MAYFLY_ADD_TESTCASE("basic arithmetic", []
+{
+    MAYFLY_CHECK(1 == 1);
+    MAYFLY_REQUIRE(0 == 0);
+    MAYFLY_CHECK(2 == 2);
+    MAYFLY_REQUIRE(!(0 == 1));
+    MAYFLY_REQUIRE(std::numeric_limits<uint64_t>::min() == 0);
+    MAYFLY_REQUIRE(100 == 20 + 80);
+});
 
-MAYFLY_ADD_TESTCASE_TO("foobaz", "lalala", []() {})
+MAYFLY_END_SUITE;

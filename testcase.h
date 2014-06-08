@@ -26,6 +26,8 @@
 #include <functional>
 #include <chrono>
 
+#include "asserts.h"
+
 namespace reaver
 {
     namespace mayfly { inline namespace _v1
@@ -61,7 +63,10 @@ namespace reaver
 
             void operator()() const
             {
+                _detail::_local_assertions_logger() = _detail::_assertions_logger{};
                 _test();
+                _detail::_local_assertions_logger()->throw_exception();
+                _detail::_local_assertions_logger() = {};
             }
 
         private:

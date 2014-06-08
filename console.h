@@ -22,6 +22,8 @@
 
 #pragma once
 
+#include <boost/algorithm/string.hpp>
+
 #include "reporter.h"
 #include "suite.h"
 
@@ -58,6 +60,9 @@ namespace reaver
 
             virtual void test_finished(const testcase_result & result) const override
             {
+                std::string description = result.description;
+                boost::algorithm::replace_all(description, "|n", "\n");
+
                 switch (result.status)
                 {
                     case testcase_status::passed:
@@ -65,11 +70,13 @@ namespace reaver
                         break;
 
                     case testcase_status::failed:
-                        reaver::logger::dlog(reaver::logger::error) << "test failed: `" << result.name << "`.\n" << "Reason: " << style::style() << result.description;
+                        reaver::logger::dlog(reaver::logger::error) << "test failed: `" << result.name << "`." << (description.empty() ? "" : "\nReason: ")
+                            << style::style() << description;
                         break;
 
                     case testcase_status::crashed:
-                        reaver::logger::dlog(reaver::logger::error) << "test crashed: `" << result.name << "`.\n" << "Reason: " << style::style() << result.description;
+                        reaver::logger::dlog(reaver::logger::error) << "test crashed: `" << result.name << "`." << (description.empty() ? "" : "\nReason: ")
+                            << style::style() << description;
                         break;
 
                     default:

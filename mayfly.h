@@ -26,3 +26,4 @@
 #include "mayfly/runner.h"
 #include "mayfly/testcase.h"
 #include "mayfly/reporter.h"
+#include "mayfly/asserts.h"
