@@ -24,14 +24,19 @@
 
 MAYFLY_BEGIN_SUITE("basic tests");
 
-MAYFLY_ADD_TESTCASE("basic arithmetic", []
+MAYFLY_ADD_TESTCASE("basic assertions", []
 {
-    MAYFLY_CHECK(1 == 1);
+    MAYFLY_CHECK(0 == 0);
     MAYFLY_REQUIRE(0 == 0);
-    MAYFLY_CHECK(2 == 2);
     MAYFLY_REQUIRE(!(0 == 1));
-    MAYFLY_REQUIRE(std::numeric_limits<uint64_t>::min() == 0);
-    MAYFLY_REQUIRE(100 == 20 + 80);
+    MAYFLY_CHECK(100 == 20 + 80);
 });
+
+MAYFLY_ADD_TESTCASE("exceptions-related assertions", []
+{
+    MAYFLY_CHECK_THROWS(throw 1);
+    MAYFLY_CHECK_THROWS_TYPE(int, throw 1);
+    MAYFLY_REQUIRE_NOTHROW((void)0);
+})
 
 MAYFLY_END_SUITE;

@@ -127,3 +127,25 @@ namespace reaver
 
 #define MAYFLY_CHECK(...) \
     if (!(__VA_ARGS__)) { ::reaver::mayfly::log_assertion(#__VA_ARGS__); }
+
+#define MAYFLY_REQUIRE_THROWS(...) \
+    try { __VA_ARGS__; ::reaver::mayfly::log_assertion(#__VA_ARGS__ " should have thrown, but didn't", true); } catch (...) {}
+
+#define MAYFLY_CHECK_THROWS(...) \
+    try { __VA_ARGS__; ::reaver::mayfly::log_assertion(#__VA_ARGS__ " should have thrown, but didn't"); } catch (...) {}
+
+#define MAYFLY_REQUIRE_THROWS_TYPE(type, ...)                                                                                            \
+    try { __VA_ARGS__; ::reaver::mayfly::log_assertion(#__VA_ARGS__ " should have thrown " #type ", but didn't throw anything", true); } \
+    catch (type & e) {}                                                                                                                  \
+    catch (...) { ::reaver::mayfly::log_assertion(#__VA_ARGS__ " should have thrown " #type" ", but has thrown something else", true); }
+
+#define MAYFLY_CHECK_THROWS_TYPE(type, ...)                                                                                        \
+    try { __VA_ARGS__; ::reaver::mayfly::log_assertion(#__VA_ARGS__ " should have thrown " #type ", but didn't throw anything"); } \
+    catch (type &) {}                                                                                                              \
+    catch (...) { ::reaver::mayfly::log_assertion(#__VA_ARGS__ " should have thrown " #type ", but has thrown something else"); }
+
+#define MAYFLY_REQUIRE_NOTHROW(...) \
+    try { __VA_ARGS__; } catch (...) { ::reaver::mayfly::log_assertion(#__VA_ARGS__ " shouldn't have thrown", true); }
+
+#define MAYFLY_CHECK_NOTHROW(...) \
+    try { __VA_ARGS__; } catch (...) { ::reaver::mayfly::log_assertion(#__VA_ARGS__ " shouldn't have thrown"); }
