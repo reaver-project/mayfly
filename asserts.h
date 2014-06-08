@@ -68,7 +68,7 @@ namespace reaver
 
                     std::string exception_string = "assertion";
                     exception_string += single ? "" : "s";
-                    exception_string += " failed:";
+                    exception_string += " failed: ";
 
                     if (single)
                     {
