@@ -31,8 +31,6 @@ MAYFLY_ADD_TESTCASE("basic assertions", []
     MAYFLY_REQUIRE(0 == 0);
     MAYFLY_REQUIRE(!(0 == 1));
     MAYFLY_CHECK(100 == 20 + 80);
-    int * p = nullptr;
-    *p = 0;
 });
 
 MAYFLY_ADD_TESTCASE("exceptions-related assertions", []
@@ -40,7 +38,6 @@ MAYFLY_ADD_TESTCASE("exceptions-related assertions", []
     MAYFLY_CHECK_THROWS(throw 1);
     MAYFLY_CHECK_THROWS_TYPE(int, throw 1);
     MAYFLY_REQUIRE_NOTHROW((void)0);
-    MAYFLY_REQUIRE(0);
 })
 
 MAYFLY_END_SUITE;
