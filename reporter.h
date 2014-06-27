@@ -43,6 +43,15 @@ namespace reaver
 
         enum class testcase_status;
 
+        class invalid_testcase_status : public exception
+        {
+        public:
+            invalid_testcase_status() : exception{ reaver::logger::crash }
+            {
+                *this << "a test result contained invalid state.";
+            }
+        };
+
         class reporter
         {
         public:

@@ -21,6 +21,7 @@
  **/
 
 #include <reaver/mayfly/main.h>
+#include <reaver/mayfly/teamcity.h>
 
 MAYFLY_BEGIN_SUITE("basic tests");
 

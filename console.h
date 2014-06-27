@@ -31,15 +31,6 @@ namespace reaver
 {
     namespace mayfly { inline namespace _v1
     {
-        class invalid_testcase_status : public exception
-        {
-        public:
-            invalid_testcase_status() : exception{ reaver::logger::crash }
-            {
-                *this << "a test result contained invalid state.";
-            }
-        };
-
         class console_reporter : public reporter
         {
         public:
