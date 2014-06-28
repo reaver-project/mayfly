@@ -211,18 +211,25 @@ namespace reaver
                     std::vector<std::string> args{ _executable, "--test", s.name() + "/" + t.name(), "-q" };
 
                     boost::process::pipe p = boost::process::create_pipe();
-                    std::shared_ptr<std::atomic<bool>> flag = std::make_shared<std::atomic<bool>>(false);
+                    std::atomic<bool> timeout_flag{ false };
+                    std::atomic<bool> finished_flag{ false };
+                    std::mutex m;
+                    std::condition_variable cv;
+                    std::thread t;
 
                     {
                         boost::iostreams::file_descriptor_sink sink{ p.sink, boost::iostreams::close_handle };
 
                         auto child = boost::process::execute(set_args(args), bind_stdout(sink), close_stdin());
 
-                        std::thread t{ [&child, flag, this]()
+                        t = std::thread{ [&]()
                         {
-                            std::this_thread::sleep_for(std::chrono::seconds(_timeout));
-                            *flag = true;
-                            boost::process::terminate(child);
+                            std::unique_lock<std::mutex> lock{ m };
+                            if (!cv.wait_for(lock, std::chrono::seconds(_timeout), [&]() -> bool { return finished_flag; }))
+                            {
+                                timeout_flag = true;
+                                boost::process::terminate(child);
+                            }
                         }};
                         t.detach();
                     }
@@ -239,6 +246,17 @@ namespace reaver
                         std::getline(is, message);
                         message = message.substr(1);            // remove the leading space; thanks, b.iostreams for no .ignore()
 
+                        try
+                        {
+                            finished_flag = true;
+                            cv.notify_all();
+                            t.join();
+                        }
+
+                        catch (...)
+                        {
+                        }
+
                         if (!is || retval > 3)
                         {
                             result.status = testcase_status::crashed;
@@ -253,7 +271,7 @@ namespace reaver
 
                     catch (...)
                     {
-                        if (*flag)
+                        if (timeout_flag)
                         {
                             result.status = testcase_status::timed_out;
                         }
