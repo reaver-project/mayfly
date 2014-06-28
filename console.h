@@ -22,6 +22,8 @@
 
 #pragma once
 
+#include <iomanip>
+
 #include <boost/algorithm/string.hpp>
 
 #include "reporter.h"
@@ -70,6 +72,10 @@ namespace reaver
                             << style::style() << description;
                         break;
 
+                    case testcase_status::timed_out:
+                        reaver::logger::dlog(reaver::logger::error) << "testcase timed out: `" << result.name << "`.";
+                        break;
+
                     default:
                         throw invalid_testcase_status{};
                 }
@@ -80,8 +86,10 @@ namespace reaver
                 auto && white = style::style(style::colors::bgray, style::colors::def, style::styles::bold);
                 auto && red = style::style(style::colors::bred, style::colors::def, style::styles::bold);
                 auto && green = style::style(style::colors::green, style::colors::def, style::styles::bold);
+                auto && yellow = style::style(style::colors::bbrown, style::colors::def, style::styles::bold);
 
                 std::uintmax_t crashed = 0;
+                std::uintmax_t timed_out = 0;
 
                 if (summary.size())
                 {
@@ -99,6 +107,11 @@ namespace reaver
                         case testcase_status::crashed:
                             reaver::logger::dlog() << white << " - " << elem.second << ": " << red << "CRASHED";
                             ++crashed;
+                            break;
+
+                        case testcase_status::timed_out:
+                            reaver::logger::dlog() << white << " - " << elem.second << ": " << yellow << "TIMED OUT";
+                            ++timed_out;
                             break;
 
                         default:
@@ -122,19 +135,26 @@ namespace reaver
                     reaver::logger::dlog() << green << "All tests passed!";
                 }
 
+                auto width = std::to_string(total).size();
+
                 if (passed)
                 {
-                    reaver::logger::dlog() << green << "Passed" <<  white << ":  " << passed << " / " << total;
+                    reaver::logger::dlog() << green << "Passed" <<  white << ":    " << to_string_width(passed, width) << " / " << total;
                 }
 
-                if (total - passed - crashed)
+                if (total - passed - crashed - timed_out)
                 {
-                    reaver::logger::dlog() << red << "Failed" <<  white << ":  " << (total - passed - crashed) << " / " << total;
+                    reaver::logger::dlog() << red << "Failed" <<  white << ":    " << to_string_width(total - passed - crashed - timed_out, width) << " / " << total;
                 }
 
                 if (crashed)
                 {
-                    reaver::logger::dlog() << red << "Crashed" <<  white << ": " << crashed << " / " << total;
+                    reaver::logger::dlog() << red << "Crashed" <<  white << ":   " << to_string_width(crashed, width) << " / " << total;
+                }
+
+                if (timed_out)
+                {
+                    reaver::logger::dlog() << yellow << "Timed out" << white << ": " << to_string_width(timed_out, width) << " / " << total;
                 }
             }
         };

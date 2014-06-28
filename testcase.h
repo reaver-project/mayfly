@@ -38,7 +38,8 @@ namespace reaver
             passed = 1,
             failed = 2,
             crashed = 3,
-            not_found = 4
+            timed_out = 4, 
+            not_found = 5
         };
 
         struct testcase_result

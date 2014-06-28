@@ -66,7 +66,11 @@ namespace reaver
                         break;
 
                     case testcase_status::crashed:
-                        reaver::logger::dlog() << "##teamcity[testFailed name='" << name << "' details='Testcase crashed" << description << "']";
+                        reaver::logger::dlog() << "##teamcity[testFailed name='" << name << "' details='Testcase crashed.']";
+                        break;
+
+                    case testcase_status::timed_out:
+                        reaver::logger::dlog() << "##teamcity[testFailed name'" << name << "' details='Testcase timed out.']";
                         break;
 
                     default:

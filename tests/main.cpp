@@ -38,6 +38,6 @@ MAYFLY_ADD_TESTCASE("exceptions-related assertions", []
     MAYFLY_CHECK_THROWS(throw 1);
     MAYFLY_CHECK_THROWS_TYPE(int, throw 1);
     MAYFLY_REQUIRE_NOTHROW((void)0);
-})
+});
 
 MAYFLY_END_SUITE;

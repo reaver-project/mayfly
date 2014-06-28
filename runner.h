@@ -45,8 +45,8 @@ namespace reaver
         class runner
         {
         public:
-            runner(std::size_t threads = 1, std::string suite_name = "", std::string test_name = "") : _threads{ threads }, _suite_name{ std::move(suite_name) },
-                _test_name{ std::move(test_name) }
+            runner(std::size_t threads = 1, std::size_t timeout = 60, std::string suite_name = "", std::string test_name = "") : _threads{ threads }, _timeout{ timeout},
+                _suite_name{ std::move(suite_name) }, _test_name{ std::move(test_name) }
             {
             }
 
@@ -70,6 +70,7 @@ namespace reaver
         protected:
             std::size_t _threads = 1;
             std::size_t _limit = 0;
+            std::size_t _timeout = 60;
 
             std::string _suite_name;
             std::string _test_name;
@@ -83,8 +84,8 @@ namespace reaver
         class subprocess_runner : public runner
         {
         public:
-            subprocess_runner(std::string executable, std::size_t threads = 1, std::string suite = "", std::string test_name = "") : runner{ threads, std::move(suite),
-                std::move(test_name) }, _executable{ std::move(executable) }
+            subprocess_runner(std::string executable, std::size_t threads = 1, std::size_t timeout = 60, std::string suite = "", std::string test_name = "") : runner{ threads, timeout,
+                std::move(suite), std::move(test_name) }, _executable{ std::move(executable) }
             {
             }
 
@@ -210,11 +211,20 @@ namespace reaver
                     std::vector<std::string> args{ _executable, "--test", s.name() + "/" + t.name(), "-q" };
 
                     boost::process::pipe p = boost::process::create_pipe();
+                    std::atomic<bool> flag{ false };
 
                     {
                         boost::iostreams::file_descriptor_sink sink{ p.sink, boost::iostreams::close_handle };
 
-                        boost::process::execute(set_args(args), bind_stdout(sink), close_stdin());
+                        auto child = boost::process::execute(set_args(args), bind_stdout(sink), close_stdin());
+
+                        std::thread t{ [&]()
+                        {
+                            std::this_thread::sleep_for(std::chrono::seconds(_timeout));
+                            flag = true;
+                            boost::process::terminate(child);
+                        }};
+                        t.detach();
                     }
 
                     boost::iostreams::file_descriptor_source source{ p.source, boost::iostreams::close_handle };
@@ -243,7 +253,15 @@ namespace reaver
 
                     catch (...)
                     {
-                        result.status = testcase_status::crashed;
+                        if (flag)
+                        {
+                            result.status = testcase_status::timed_out;
+                        }
+
+                        else
+                        {
+                            result.status = testcase_status::crashed;
+                        }
                     }
                 }
 
@@ -292,7 +310,7 @@ namespace reaver
             return *default_runner;
         }
 
-        constexpr const char * version_string = "Reaver Project's Mayfly v0.1.0 alpha\nCopyright © 2014 Reaver Project Team\n";
+        constexpr static const char * version_string = "Reaver Project's Mayfly v0.1.0 alpha\nCopyright © 2014 Reaver Project Team\n";
 
         class invalid_testcase_name_format : public exception
         {
@@ -306,6 +324,7 @@ namespace reaver
         inline int run(const std::vector<suite> & suites, int argc, char ** argv)
         {
             std::size_t threads = 1;
+            std::size_t timeout = 60;
             std::string test_name;
             std::vector<std::string> reporters;
             std::string executable = argv[0];
@@ -319,10 +338,11 @@ namespace reaver
 
             boost::program_options::options_description config("Configuration");
             config.add_options()
-                ("j", boost::program_options::value<std::size_t>(&threads)->default_value(1), "specify the amount of worker threads")
-                ("test,t", boost::program_options::value<std::string>(), "specify the thread to run")
+                ("tasks,j", boost::program_options::value<std::size_t>(&threads), "specify the amount of worker threads")
+                ("test,t", boost::program_options::value<std::string>(&test_name), "specify the thread to run")
                 ("reporter,r", boost::program_options::value<std::vector<std::string>>()->composing(), "select a reporter to use")
                 ("quiet,q", "disable reporters")
+                ("timeout,l", boost::program_options::value<std::size_t>(&timeout), "specify the timeout for tests (in seconds)")
                 ("error,e", "only show errors and summary (controls console output)");
 
             boost::program_options::options_description options;
@@ -336,6 +356,7 @@ namespace reaver
                     | boost::program_options::command_line_style::long_allow_next
                     | boost::program_options::command_line_style::short_allow_next
                     | boost::program_options::command_line_style::allow_long_disguise).run(), variables);
+            boost::program_options::notify(variables);
 
             if (variables.count("help"))
             {
@@ -353,11 +374,6 @@ namespace reaver
                 std::cout << "Mayfly is the Reaver Project's free testing framework.\n";
 
                 return 0;
-            }
-
-            if (variables.count("test"))
-            {
-                test_name = variables["test"].as<std::string>();
             }
 
             if (variables.count("reporter"))
@@ -398,13 +414,12 @@ namespace reaver
 
             if (!test_name.empty())
             {
-
                 suite = test_name.substr(0, test_name.find('/'));
                 test_name = test_name.substr(test_name.find('/') + 1);
             }
 
             auto && reporter = combine(reps);
-            default_runner(std::make_unique<subprocess_runner>(executable, threads, suite, test_name))(suites, reporter);
+            default_runner(std::make_unique<subprocess_runner>(executable, threads, timeout, suite, test_name))(suites, reporter);
             default_runner().summary(reporter);
 
             if (default_runner().passed() == default_runner().total())
