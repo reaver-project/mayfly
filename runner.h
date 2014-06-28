@@ -136,7 +136,7 @@ namespace reaver
                         {
                             ++_tests;
 
-                            futures.push_back(pool.push([&]()
+                            futures.push_back(pool.push([=, &rep]()
                             {
                                 auto result = _run_test(test, s, rep);
 
@@ -211,17 +211,17 @@ namespace reaver
                     std::vector<std::string> args{ _executable, "--test", s.name() + "/" + t.name(), "-q" };
 
                     boost::process::pipe p = boost::process::create_pipe();
-                    std::atomic<bool> flag{ false };
+                    std::shared_ptr<std::atomic<bool>> flag = std::make_shared<std::atomic<bool>>(false);
 
                     {
                         boost::iostreams::file_descriptor_sink sink{ p.sink, boost::iostreams::close_handle };
 
                         auto child = boost::process::execute(set_args(args), bind_stdout(sink), close_stdin());
 
-                        std::thread t{ [&]()
+                        std::thread t{ [&child, flag, this]()
                         {
                             std::this_thread::sleep_for(std::chrono::seconds(_timeout));
-                            flag = true;
+                            *flag = true;
                             boost::process::terminate(child);
                         }};
                         t.detach();
@@ -253,7 +253,7 @@ namespace reaver
 
                     catch (...)
                     {
-                        if (flag)
+                        if (*flag)
                         {
                             result.status = testcase_status::timed_out;
                         }
