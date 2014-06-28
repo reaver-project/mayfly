@@ -137,7 +137,7 @@ namespace reaver
 #define MAYFLY_REQUIRE_THROWS_TYPE(type, ...)                                                                                            \
     try { __VA_ARGS__; ::reaver::mayfly::log_assertion(#__VA_ARGS__ " should have thrown " #type ", but didn't throw anything", true); } \
     catch (type & e) {}                                                                                                                  \
-    catch (...) { ::reaver::mayfly::log_assertion(#__VA_ARGS__ " should have thrown " #type" ", but has thrown something else", true); }
+    catch (...) { ::reaver::mayfly::log_assertion(#__VA_ARGS__ " should have thrown " #type ", but has thrown something else", true); }
 
 #define MAYFLY_CHECK_THROWS_TYPE(type, ...)                                                                                        \
     try { __VA_ARGS__; ::reaver::mayfly::log_assertion(#__VA_ARGS__ " should have thrown " #type ", but didn't throw anything"); } \
