@@ -38,7 +38,7 @@ namespace reaver
             passed = 1,
             failed = 2,
             crashed = 3,
-            timed_out = 4, 
+            timed_out = 4,
             not_found = 5
         };
 

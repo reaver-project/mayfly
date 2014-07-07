@@ -91,7 +91,7 @@ namespace reaver
                 std::vector<std::string> _assertions;
             };
 
-            boost::optional<_assertions_logger> & _local_assertions_logger()
+            inline boost::optional<_assertions_logger> & _local_assertions_logger()
             {
                 static std::unordered_map<std::thread::id, boost::optional<_assertions_logger>> loggers;
 
@@ -108,7 +108,7 @@ namespace reaver
             }
         };
 
-        void log_assertion(std::string description, bool critical = false)
+        inline void log_assertion(std::string description, bool critical = false)
         {
             auto & logger = _detail::_local_assertions_logger();
 

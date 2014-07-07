@@ -133,7 +133,7 @@ namespace reaver
             return { std::cref(reporters)... };
         }
 
-        combining_reporter combine(const std::vector<std::unique_ptr<reporter>> & reporters)
+        inline combining_reporter combine(const std::vector<std::unique_ptr<reporter>> & reporters)
         {
             std::vector<std::reference_wrapper<const reporter>> tmp;
             tmp.reserve(reporters.size());

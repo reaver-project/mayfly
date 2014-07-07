@@ -73,7 +73,7 @@ namespace reaver
                         break;
 
                     case testcase_status::timed_out:
-                        reaver::logger::dlog(reaver::logger::error) << "testcase timed out: `" << result.name << "`.";
+                        reaver::logger::dlog(reaver::logger::error) << "test timed out: `" << result.name << "`.";
                         break;
 
                     default:
