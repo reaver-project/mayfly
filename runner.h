@@ -272,6 +272,11 @@ namespace reaver
                             result.status = testcase_status::crashed;
                         }
                     }
+
+                    if (t.joinable())
+                    {
+                        t.detach();
+                    }
                 }
 
                 if (_threads != 1)
