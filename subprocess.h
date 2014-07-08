@@ -54,6 +54,10 @@ namespace reaver
 
             virtual void summary(const std::vector<std::pair<testcase_status, std::string>> & summary, std::uintmax_t passed, std::uintmax_t total) const override
             {
+                if (!total)
+                {
+                    std::cout << static_cast<std::uintmax_t>(testcase_status::not_found) << std::flush;
+                }
             }
         };
 

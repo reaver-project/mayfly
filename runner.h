@@ -119,7 +119,6 @@ namespace reaver
                         }
                     }
 
-                    std::cout << static_cast<std::uintmax_t>(testcase_status::not_found) << std::flush;
                     return;
                 }
 
@@ -224,7 +223,6 @@ namespace reaver
                                 boost::process::terminate(child);
                             }
                         }};
-                        t.detach();
                     }
 
                     boost::iostreams::file_descriptor_source source{ p.source, boost::iostreams::close_handle };
