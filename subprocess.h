@@ -32,52 +32,24 @@ namespace reaver
 {
     namespace mayfly { inline namespace _v1
     {
-        class teamcity_reporter : public reporter
+        class subprocess_reporter : public reporter
         {
         public:
             virtual void suite_started(const suite & s) const override
             {
-                reaver::logger::dlog() << "##teamcity[testSuiteStarted name='" << s.name() << "']";
             }
 
             virtual void suite_finished(const suite & s) const override
             {
-                reaver::logger::dlog() << "##teamcity[testSuiteFinished name='" << s.name() << "']";
             }
 
             virtual void test_started(const testcase & t) const override
             {
-                reaver::logger::dlog() << "##teamcity[testStarted name='" << t.name() << "' captureStandardOutput='true']";
             }
 
             virtual void test_finished(const testcase_result & result) const override
             {
-                auto & name = result.name;
-                auto description = result.description;
-                boost::algorithm::replace_all(description, "'", "|'");
-
-                switch (result.status)
-                {
-                    case testcase_status::passed:
-                        break;
-
-                    case testcase_status::failed:
-                        reaver::logger::dlog() << "##teamcity[testFailed name='" << name << "' details='Test failed: " << description << "']";
-                        break;
-
-                    case testcase_status::crashed:
-                        reaver::logger::dlog() << "##teamcity[testFailed name='" << name << "' details='Test crashed.']";
-                        break;
-
-                    case testcase_status::timed_out:
-                        reaver::logger::dlog() << "##teamcity[testFailed name='" << name << "' details='Test timed out.']";
-                        break;
-
-                    default:
-                        throw invalid_testcase_status{};
-                }
-
-                reaver::logger::dlog() << "##teamcity[testFinished name='" << name << "']";
+                std::cout << static_cast<std::uintmax_t>(result.status) << ' ' << result.description << std::flush;
             }
 
             virtual void summary(const std::vector<std::pair<testcase_status, std::string>> & summary, std::uintmax_t passed, std::uintmax_t total) const override
@@ -85,6 +57,6 @@ namespace reaver
             }
         };
 
-        MAYFLY_REPORTER_REGISTER("teamcity", teamcity_reporter)
+        MAYFLY_REPORTER_REGISTER("subprocess", subprocess_reporter)
     }}
 }

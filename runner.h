@@ -37,6 +37,7 @@
 #include "testcase.h"
 #include "suite.h"
 #include "console.h"
+#include "subprocess.h"
 
 namespace reaver
 {
@@ -105,7 +106,6 @@ namespace reaver
                             if (test.name() == _test_name)
                             {
                                 auto result = _run_test(test, s, rep);
-                                std::cout << static_cast<std::uintmax_t>(result.status) << ' ' << result.description << std::flush;
 
                                 ++_tests;
 
@@ -130,13 +130,11 @@ namespace reaver
                     {
                         thread_pool pool(_threads);
 
-                        std::vector<std::future<void>> futures;
-
                         for (const auto & test : s)
                         {
                             ++_tests;
 
-                            futures.push_back(pool.push([=, &rep]()
+                            pool.push([=, &rep]()
                             {
                                 auto result = _run_test(test, s, rep);
 
@@ -149,12 +147,7 @@ namespace reaver
                                 {
                                     _failed.push_back(std::make_pair(result.status, s.name() + "/" + test.name()));
                                 }
-                            }));
-                        }
-
-                        for (auto & f : futures)
-                        {
-                            f.get();
+                            });
                         }
                     }
 
@@ -208,7 +201,7 @@ namespace reaver
                 {
                     using namespace boost::process::initializers;
 
-                    std::vector<std::string> args{ _executable, "--test", s.name() + "/" + t.name(), "-q" };
+                    std::vector<std::string> args{ _executable, "--test", s.name() + "/" + t.name(), "-r", "subprocess" };
 
                     boost::process::pipe p = boost::process::create_pipe();
                     std::atomic<bool> timeout_flag{ false };
