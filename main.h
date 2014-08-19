@@ -31,7 +31,7 @@ int main(int argc, char ** argv) try
 
 catch (reaver::exception & e)
 {
-    e.print(reaver::logger::dlog);
+    e.print(reaver::logger::default_logger());
 
     if (e.level() == reaver::logger::crash)
     {

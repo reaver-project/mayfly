@@ -51,6 +51,8 @@ namespace reaver
             {
             }
 
+            virtual ~runner() {}
+
             virtual void operator()(const std::vector<suite> & suites, const reporter & rep) = 0;
 
             std::size_t total() const
@@ -402,7 +404,7 @@ namespace reaver
 
             if (variables.count("error"))
             {
-                reaver::logger::dlog.set_level(reaver::logger::error);
+                reaver::logger::default_logger().set_level(reaver::logger::error);
             }
 
             std::vector<std::reference_wrapper<const reporter>> reps;

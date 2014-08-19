@@ -168,7 +168,7 @@ namespace reaver
 
                 catch (reaver::exception & e)
                 {
-                    e.print(reaver::logger::dlog);
+                    e.print(reaver::logger::default_logger());
                     std::exit(2);
                 }
 
@@ -191,7 +191,7 @@ namespace reaver
 
                 catch (reaver::exception & e)
                 {
-                    e.print(reaver::logger::dlog);
+                    e.print(reaver::logger::default_logger());
                     std::exit(2);
                 }
 
