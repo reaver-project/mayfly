@@ -214,7 +214,7 @@ namespace reaver
                     {
                         boost::iostreams::file_descriptor_sink sink{ p.sink, boost::iostreams::close_handle };
 
-                        auto child = boost::process::execute(set_args(args), bind_stdout(sink), close_stdin());
+                        auto child = boost::process::execute(set_args(args), inherit_env(), bind_stdout(sink), close_stdin());
 
                         t = std::thread{ [&]()
                         {
