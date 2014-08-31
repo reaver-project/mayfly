@@ -12,8 +12,8 @@ and libc++.
 
 CI status:
 
- * Clang: <a href="http://ci.reaver-project.org/viewType.html?buildTypeId=mayfly_TestBuildWithClan&guest=1">
-    <img src="http://ci.reaver-project.org/app/rest/builds/buildType:(id:mayfly_TestBuildWithClan)/statusIcon"></a>
+ * Clang: <a href="http://ci.reaver-project.org/viewType.html?buildTypeId=mayfly_TestBuildWithClang&guest=1">
+    <img src="http://ci.reaver-project.org/app/rest/builds/buildType:(id:mayfly_TestBuildWithClang)/statusIcon"></a>
  * GCC: <a href="http://ci.reaver-project.org/viewType.html?buildTypeId=mayfly_TestBuildWithGcc&guest=1">
     <img src="http://ci.reaver-project.org/app/rest/builds/buildType:(id:mayfly_TestBuildWithGcc)/statusIcon"></a>
 
