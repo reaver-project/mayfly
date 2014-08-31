@@ -1,30 +1,63 @@
-CC=clang++
-LD=clang++
-CFLAGS=-c -Os -Wall -Wextra -pedantic -Werror -std=c++1y -stdlib=libc++ -g -MD -pthread -fPIC -Wno-unused-private-field
-LDFLAGS=-stdlib=libc++ -lc++abi -lreaver -lboost_system -lboost_program_options -lboost_iostreams -pthread -lboost_filesystem -ldl
-SOURCES=$(shell find tests/ -type f -name "*.cpp" ! -path "./tests/main.cpp")
-OBJECTS=$(SOURCES:.cpp=.o)
-EXECUTABLE=mayfly-test
+CXX = g++
+LD = g++
+CXXFLAGS += -Os -Wall -std=c++1y -MD -fPIC -Wno-unused-parameter
+SOFLAGS += -shared
+LDFLAGS +=
+LIBRARIES +=
 
-all: $(SOURCES) $(LIBRARY) $(EXECUTABLE)
+# SOURCES := $(shell find . -name "*.cpp" ! -wholename "./tests/*" ! -name "main.cpp" ! -wholename "./main/*")
+# MAINSRC := $(shell find ./main/ -name "*.cpp") main.cpp
+TESTSRC := $(shell find ./tests/ -name "*.cpp")
+# OBJECTS := $(SOURCES:.cpp=.o)
+# MAINOBJ := $(MAINSRC:.cpp=.o)
+TESTOBJ := $(TESTSRC:.cpp=.o)
 
-library: $(LIBRARY)
+PREFIX ?= /usr/local
+EXEC_PREFIX ?= $(PREFIX)
+BINDIR ?= $(EXEC_PREFIX)/bin
+LIBDIR ?= $(EXEC_PREFIX)/lib
+INCLUDEDIR ?= $(PREFIX)/include
 
-install:
-	@sudo mkdir -p /usr/local/include/reaver/mayfly
-	@find . -name "*.h" ! -path "*-old" ! -name "mayfly.h" | sudo cpio -pdm /usr/local/include/reaver/mayfly 2> /dev/null
-	@sudo cp mayfly.h /usr/local/include/reaver
+# LIBRARY = libreaver.so
+# EXECUTABLE =
 
-$(EXECUTABLE): install tests/main.o
-	$(LD) -o $@ tests/main.o $(LDFLAGS)
+# all: library
 
-%.o: %.cpp install
-	$(CC) $(CFLAGS) $< -o $@
+# library: $(LIBRARY)
+
+# $(EXECUTABLE): $(MAINOBJ)
+#	$(LD) $(CXXFLAGS) $(LDFLAGS) $(MAINOBJ) -o $@ $(LIBRARIES)
+
+# $(LIBRARY): $(OBJECTS)
+# 	$(LD) $(CXXFLAGS) $(SOFLAGS) $(OBJECTS) -o $@ $(LIBRARIES)
+
+test: ./tests/test
+
+./tests/test: $(TESTOBJ) $(LIBRARY)
+	$(LD) $(CXXFLAGS) $(LDFLAGS) $(TESTOBJ) -o $@ $(LIBRARIES) -lboost_system -lboost_iostreams -lboost_program_options -lboost_filesystem -ldl -pthread
+
+install: $(LIBRARY) # $(EXECUTABLE)
+#	@cp $(EXECUTABLE) $(DESTDIR)$(BINDIR)/$(EXECUTABLE)
+#	@cp $(LIBRARY) $(DESTDIR)$(LIBDIR)/$(LIBRARY).1
+#	@ln -sfn $(DESTDIR)$(LIBDIR)/$(LIBRARY).1 $(DESTDIR)$(LIBDIR)/$(LIBRARY)
+	@mkdir -p $(DESTDIR)$(INCLUDEDIR)/reaver
+	@cp -RT include $(DESTDIR)$(INCLUDEDIR)
+
+%.o: %.cpp
+	$(CXX) -c $(CXXFLAGS) $< -o $@ -I./include/reaver
+
+./tests/%.o: ./tests/%.cpp
+	$(CXX) -c $(CXXFLAGS) $< -o $@ -I./include/reaver
 
 clean:
 	@find . -name "*.o" -delete
 	@find . -name "*.d" -delete
-	@rm -rf $(EXECUTABLE)
+#	@rm -f $(LIBRARY)
+#	@rm -f $(EXECUTABLE)
+	@rm -f tests/test
 
--include $(SOURCES:.cpp=.d)
--include main.d
+.PHONY: install clean test
+
+# -include $(SOURCES:.cpp=.d)
+# -include $(MAINSRC:.cpp=.d)
+-include $(TESTSRC:.cpp=.d)

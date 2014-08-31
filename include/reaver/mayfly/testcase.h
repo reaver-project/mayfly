@@ -53,7 +53,8 @@ namespace reaver
         class testcase
         {
         public:
-            testcase(std::string name, std::function<void ()> test) : _name{ std::move(name) }, _test{ std::move(test) }
+            testcase(std::string name, std::function<void ()> test, bool positive = true, std::size_t assertions_to_fail = 0) : _name{ std::move(name) }, _test{ std::move(test) },
+                _positive{ positive }, _assertions_to_fail{ assertions_to_fail }
             {
             }
 
@@ -64,15 +65,24 @@ namespace reaver
 
             void operator()() const
             {
-                _detail::_local_assertions_logger() = _detail::_assertions_logger{};
-                _test();
-                _detail::_local_assertions_logger()->throw_exception();
-                _detail::_local_assertions_logger() = {};
+                try
+                {
+                    _detail::_local_assertions_logger() = _detail::_assertions_logger{ _positive, _assertions_to_fail };
+                    _test();
+                    _detail::_local_assertions_logger()->throw_exception();
+                    _detail::_local_assertions_logger() = {};
+                }
+
+                catch (expected_failure_exit &)
+                {
+                }
             }
 
         private:
             std::string _name;
             std::function<void ()> _test;
+            bool _positive;
+            std::size_t _assertions_to_fail;
         };
     }}
 }

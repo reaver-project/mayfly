@@ -210,10 +210,13 @@ namespace reaver
 
 #define MAYFLY_ADD_TESTCASE_TO(suite, test, ...)                                                                            \
     namespace { static ::reaver::mayfly::testcase_registrar MAYFLY_DETAIL_UNIQUE_NAME { suite, ::reaver::mayfly::testcase { \
-        test, __VA_ARGS__} }; }
+        test, __VA_ARGS__ } }; }
 
 #define MAYFLY_BEGIN_SUITE(name)                                                           \
     MAYFLY_ADD_SUITE(name)                                                                 \
+    namespace { namespace MAYFLY_DETAIL_UNIQUE_NAME { const std::string && _suite_name = name;
+
+#define MAYFLY_CONTINUE_SUITE(name)                                                        \
     namespace { namespace MAYFLY_DETAIL_UNIQUE_NAME { const std::string && _suite_name = name;
 
 #define MAYFLY_END_SUITE \
@@ -221,3 +224,17 @@ namespace reaver
 
 #define MAYFLY_ADD_TESTCASE(test, ...) \
     MAYFLY_ADD_TESTCASE_TO(_suite_name, test, __VA_ARGS__)
+
+#define MAYFLY_ADD_NEGATIVE_TESTCASE_TO(suite, test, ...) \
+    namespace { static ::reaver::mayfly::testcase_registrar MAYFLY_DETAIL_UNIQUE_NAME { suite, ::reaver::mayfly::testcase { \
+        test, __VA_ARGS__, false } }; }
+
+#define MAYFLY_ADD_NEGATIVE_TESTCASE(test, ...) \
+    MAYFLY_ADD_NEGATIVE_TESTCASE_TO(_suite_name, test, __VA_ARGS__)
+
+#define MAYFLY_ADD_NEGATIVE_TESTCASE_N_TO(suite, test, N, ...) \
+    namespace { static ::reaver::mayfly::testcase_registrar MAYFLY_DETAIL_UNIQUE_NAME { suite, ::reaver::mayfly::testcase { \
+        test, __VA_ARGS__, false, N } }; }
+
+#define MAYFLY_ADD_NEGATIVE_TESTCASE_N(test, N, ...) \
+    MAYFLY_ADD_NEGATIVE_TESTCASE_N_TO(_suite_name, test, N, __VA_ARGS__)

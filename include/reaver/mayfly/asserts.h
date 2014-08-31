@@ -37,9 +37,30 @@ namespace reaver
         class assertions_failed : public std::runtime_error
         {
         public:
-            assertions_failed(std::string description) : std::runtime_error{ std::move(description) }
+            assertions_failed(std::string description, std::size_t count) : std::runtime_error{ std::move(description) }, _count{ count }
             {
             }
+
+            std::size_t count() const
+            {
+                return _count;
+            }
+
+        private:
+            std::size_t _count;
+        };
+
+        class expected_failure : public std::runtime_error
+        {
+        public:
+            expected_failure(std::size_t count, std::size_t failed, std::string asserts) : std::runtime_error{ "negative test conditions not met" + (count ? " (" + std::to_string(count) +
+                " assertions expected to fail, " : " (") + std::to_string(failed) + " assertions failed); " + asserts }
+            {
+            }
+        };
+
+        class expected_failure_exit
+        {
         };
 
         namespace _detail
@@ -47,23 +68,48 @@ namespace reaver
             class _assertions_logger
             {
             public:
+                _assertions_logger(bool positive = true, std::size_t assertions_to_fail = 0) : _positive{ positive }, _assertions_to_fail{ assertions_to_fail }
+                {
+                }
+
                 void log(std::string str, bool critical = false)
                 {
                     _assertions.push_back(std::move(str));
 
                     if (critical)
                     {
-                        throw_exception();
+                        throw_exception(critical);
                     }
                 }
 
-                void throw_exception()
+                void throw_exception(bool critical = false)
                 {
-                    if (_assertions.empty())
+                    if (!_positive)
+                    {
+                        if (_assertions_to_fail && _assertions.size() != _assertions_to_fail)
+                        {
+                            throw expected_failure{ _assertions_to_fail, _assertions.size(), _build_exception_string() };
+                        }
+
+                        else
+                        {
+                            throw expected_failure_exit{};
+                        }
+                    }
+
+                    else if (_assertions.empty())
                     {
                         return;
                     }
 
+                    auto size = _assertions.size();
+                    _assertions.clear();
+                    throw assertions_failed{ _build_exception_string(), size };
+                }
+
+            private:
+                std::string _build_exception_string()
+                {
                     bool single = _assertions.size() == 1;
 
                     std::string exception_string = "assertion";
@@ -83,12 +129,12 @@ namespace reaver
                         }
                     }
 
-                    _assertions.clear();
-                    throw assertions_failed{ std::move(exception_string) };
+                    return exception_string;
                 }
 
-            private:
                 std::vector<std::string> _assertions;
+                bool _positive;
+                std::size_t _assertions_to_fail;
             };
 
             inline boost::optional<_assertions_logger> & _local_assertions_logger()
@@ -122,11 +168,15 @@ namespace reaver
     }}
 }
 
-#define MAYFLY_REQUIRE(...) \
-    if (!(__VA_ARGS__)) { ::reaver::mayfly::log_assertion(#__VA_ARGS__, true); }
+#define MAYFLY_REQUIRE(...)                                                              \
+    try { if (!(__VA_ARGS__)) { ::reaver::mayfly::log_assertion(#__VA_ARGS__, true); } } \
+    catch (::reaver::mayfly::expected_failure_exit) { throw; }                           \
+    catch (...) { ::reaver::mayfly::log_assertion(#__VA_ARGS__ " has thrown an unexpected exception", true); }
 
-#define MAYFLY_CHECK(...) \
-    if (!(__VA_ARGS__)) { ::reaver::mayfly::log_assertion(#__VA_ARGS__); }
+#define MAYFLY_CHECK(...)                                                          \
+    try { if (!(__VA_ARGS__)) { ::reaver::mayfly::log_assertion(#__VA_ARGS__); } } \
+    catch (::reaver::mayfly::expected_failure_exit) { throw; }                     \
+    catch (...) { ::reaver::mayfly::log_assertion(#__VA_ARGS__ " has thrown an unexpected exception", true); }
 
 #define MAYFLY_REQUIRE_THROWS(...) \
     try { __VA_ARGS__; ::reaver::mayfly::log_assertion(#__VA_ARGS__ " should have thrown, but didn't", true); } catch (...) {}
