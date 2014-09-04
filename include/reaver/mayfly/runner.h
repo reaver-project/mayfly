@@ -24,6 +24,7 @@
 
 #include <memory>
 #include <iostream>
+#include <chrono>
 
 #include <boost/process.hpp>
 #include <boost/process/initializers.hpp>
@@ -202,6 +203,8 @@ namespace reaver
                     std::condition_variable cv;
                     std::thread t;
 
+                    auto begin = std::chrono::high_resolution_clock::now();
+
                     {
                         boost::iostreams::file_descriptor_sink sink{ p.sink, boost::iostreams::close_handle };
 
@@ -265,6 +268,9 @@ namespace reaver
                             result.status = testcase_status::crashed;
                         }
                     }
+
+                    auto duration = std::chrono::high_resolution_clock::now() - begin;
+                    result.duration = std::chrono::duration_cast<std::chrono::milliseconds>(duration);
 
                     if (t.joinable())
                     {

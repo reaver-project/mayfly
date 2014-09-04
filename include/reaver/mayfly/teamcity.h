@@ -77,7 +77,7 @@ namespace reaver
                         throw invalid_testcase_status{};
                 }
 
-                reaver::logger::dlog() << "##teamcity[testFinished name='" << name << "']";
+                reaver::logger::dlog() << "##teamcity[testFinished name='" << name << "' duration='" << result.duration.count() << "']";
             }
 
             virtual void summary(const std::vector<std::pair<testcase_status, std::string>> & summary, std::uintmax_t passed, std::uintmax_t total) const override

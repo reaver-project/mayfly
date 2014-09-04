@@ -60,16 +60,16 @@ namespace reaver
                 switch (result.status)
                 {
                     case testcase_status::passed:
-                        reaver::logger::dlog(reaver::logger::success) << "test passed: `" << result.name << "`.";
+                        reaver::logger::dlog(reaver::logger::success) << "test passed: `" << result.name << "`, in " << result.duration.count() << "ms.";
                         break;
 
                     case testcase_status::failed:
-                        reaver::logger::dlog(reaver::logger::error) << "test failed: `" << result.name << "`." << (description.empty() ? "" : "\nReason: ")
+                        reaver::logger::dlog(reaver::logger::error) << "test failed: `" << result.name << "`, in " << result.duration.count() << "ms." << (description.empty() ? "" : "\nReason: ")
                             << style::style() << description;
                         break;
 
                     case testcase_status::crashed:
-                        reaver::logger::dlog(reaver::logger::error) << "test crashed: `" << result.name << "`." << (description.empty() ? "" : "\nReason: ")
+                        reaver::logger::dlog(reaver::logger::error) << "test crashed: `" << result.name << "`, in " << result.duration.count() << "ms." << (description.empty() ? "" : "\nReason: ")
                             << style::style() << description;
                         break;
 
