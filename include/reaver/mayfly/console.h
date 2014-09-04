@@ -38,11 +38,12 @@ namespace reaver
         public:
             virtual void suite_started(const suite & s) const override
             {
-                reaver::logger::dlog(reaver::logger::info) << "entering suite `" << s.name() << "`.";
+                reaver::logger::dlog(reaver::logger::info) << "entering suite `" << s.name() << "`.\n";
             }
 
             virtual void suite_finished(const suite & s) const override
             {
+                reaver::logger::dlog();
                 reaver::logger::dlog(reaver::logger::info) << "leaving suite `" << s.name() << "`.\n";
             }
 

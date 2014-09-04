@@ -30,6 +30,7 @@ namespace
     }
 }
 
+MAYFLY_BEGIN_SUITE("assertions");
 MAYFLY_BEGIN_SUITE("unchecked exceptions");
 
 MAYFLY_ADD_NEGATIVE_TESTCASE("exception from check", []
@@ -42,4 +43,5 @@ MAYFLY_ADD_NEGATIVE_TESTCASE("exception from require", []
     MAYFLY_REQUIRE(throws());
 });
 
+MAYFLY_END_SUITE;
 MAYFLY_END_SUITE;

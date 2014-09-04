@@ -22,6 +22,7 @@
 
 #include "mayfly.h"
 
+MAYFLY_BEGIN_SUITE("assertions");
 MAYFLY_BEGIN_SUITE("basic assertions");
 
 MAYFLY_ADD_TESTCASE("check", []
@@ -59,4 +60,5 @@ MAYFLY_ADD_NEGATIVE_TESTCASE_N("multiple failing requires", 1, []
     MAYFLY_REQUIRE(1 == 2);
 });
 
+MAYFLY_END_SUITE;
 MAYFLY_END_SUITE;

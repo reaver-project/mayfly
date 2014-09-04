@@ -29,6 +29,7 @@ namespace
     }
 }
 
+MAYFLY_BEGIN_SUITE("assertions");
 MAYFLY_BEGIN_SUITE("exceptions-related assertions");
 
 MAYFLY_ADD_TESTCASE("check throws", []
@@ -101,4 +102,5 @@ MAYFLY_ADD_NEGATIVE_TESTCASE("require throws type mismatch", []
     MAYFLY_REQUIRE_THROWS_TYPE(int, throw false);
 });
 
+MAYFLY_END_SUITE;
 MAYFLY_END_SUITE;
