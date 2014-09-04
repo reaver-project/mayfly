@@ -204,7 +204,7 @@ namespace reaver
 
                 if (_names.find(parent_path) == _names.end())
                 {
-                    throw unknown_parent{ s.name(), parent_path };
+                    throw unknown_parent{ parent_path, s.name() };
                 }
 
                 if (_names.find(parent_path + "/" + s.name()) != _names.end())

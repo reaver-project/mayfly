@@ -103,8 +103,9 @@ namespace reaver
                     }
 
                     auto size = _assertions.size();
+                    auto exception_string = _build_exception_string();
                     _assertions.clear();
-                    throw assertions_failed{ _build_exception_string(), size };
+                    throw assertions_failed{ std::move(exception_string), size };
                 }
 
             private:
