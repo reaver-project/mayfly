@@ -323,14 +323,14 @@ namespace reaver
             return *default_runner;
         }
 
-        constexpr static const char * version_string = "Reaver Project's Mayfly v0.1.0 alpha\nCopyright © 2014 Reaver Project Team\n";
+        constexpr static const char * version_string = "Reaver Project's Mayfly v0.1.1 alpha\nCopyright © 2014 Reaver Project Team\n";
 
         class invalid_testcase_name_format : public exception
         {
         public:
             invalid_testcase_name_format(const std::string & test_name) : exception{ reaver::logger::error }
             {
-                *this << "invalid testcase name format - proper format is `suite/testcase`.";
+                *this << "invalid testcase name format - proper format is `suite(s)/testcase`.";
             }
         };
 
