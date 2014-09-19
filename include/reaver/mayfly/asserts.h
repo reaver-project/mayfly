@@ -171,7 +171,8 @@ namespace reaver
 
 #define MAYFLY_REQUIRE(...)                                                              \
     try { if (!(__VA_ARGS__)) { ::reaver::mayfly::log_assertion(#__VA_ARGS__, true); } } \
-    catch (::reaver::mayfly::expected_failure_exit) { throw; }                           \
+    catch (::reaver::mayfly::expected_failure_exit &) { throw; }                         \
+    catch (::reaver::mayfly::assertions_failed &) { throw; }                             \
     catch (...) { ::reaver::mayfly::log_assertion(#__VA_ARGS__ " has thrown an unexpected exception", true); }
 
 #define MAYFLY_CHECK(...)                                                          \
