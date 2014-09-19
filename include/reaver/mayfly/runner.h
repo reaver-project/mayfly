@@ -155,6 +155,9 @@ namespace reaver
             {
                 testcase_result result;
                 result.name = t.name();
+                result.status = testcase_status::passed;
+
+                std::vector<std::string> output;
 
                 if (_threads == 1)
                 {
@@ -166,7 +169,6 @@ namespace reaver
                     try
                     {
                         t();
-                        result.status = testcase_status::passed;
                     }
 
                     catch (reaver::exception & e)
@@ -213,7 +215,7 @@ namespace reaver
                         t = std::thread{ [&]()
                         {
                             std::unique_lock<std::mutex> lock{ m };
-                            if (!cv.wait_for(lock, std::chrono::seconds(_timeout), [&]() -> bool { return finished_flag; }))
+                            if (!cv.wait_for(lock, std::chrono::seconds{ _timeout }, [&]() -> bool { return finished_flag; }))
                             {
                                 timeout_flag = true;
                                 boost::process::terminate(child);
@@ -224,39 +226,57 @@ namespace reaver
                     boost::iostreams::file_descriptor_source source{ p.source, boost::iostreams::close_handle };
                     boost::iostreams::stream<boost::iostreams::file_descriptor_source> is(source);
 
-                    std::uintmax_t retval;
                     std::string message;
 
-                    try
+                    enum { not_started, started, finished, exited } state = not_started;
+
+                    while (std::getline(is, message))
                     {
-                        is >> retval;
-                        std::getline(is, message);
-                        message = message.substr(1);            // remove the leading space; thanks, b.iostreams for no .ignore()
-
-                        try
+                        if (message.substr(0, 2) == "{{")
                         {
-                            finished_flag = true;
-                            cv.notify_all();
-                            t.join();
-                        }
+                            if (message == "{{started}}")
+                            {
+                                assert(state == not_started);
+                                state = started;
+                            }
 
-                        catch (...)
-                        {
-                        }
+                            else if (message == "{{finished}}")
+                            {
+                                assert(state == started);
+                                state = finished;
+                            }
 
-                        if (!is || retval > 3)
-                        {
-                            result.status = testcase_status::crashed;
+                            else if (message == "{{exit}}")
+                            {
+                                assert(state == finished);
+                                state = exited;
+                            }
+
+                            else if (message.substr(0, 8) == "{{failed")
+                            {
+                                assert(state == started);
+                                result.status = testcase_status::failed;
+                                result.description = message.substr(9, message.length() - 11);
+                            }
+
+                            else if (message == "{{error unexpected test status}}")
+                            {
+                                throw unexpected_result{};
+                            }
+
+                            else if (message == "{{error not found}}")
+                            {
+                                result.status = testcase_status::not_found;
+                            }
                         }
 
                         else
                         {
-                            result.status = static_cast<testcase_status>(retval);
-                            result.description = message;
+                            output.push_back(std::move(message));
                         }
                     }
 
-                    catch (...)
+                    if (state != exited)
                     {
                         if (timeout_flag)
                         {
@@ -267,6 +287,17 @@ namespace reaver
                         {
                             result.status = testcase_status::crashed;
                         }
+                    }
+
+                    try
+                    {
+                        finished_flag = true;
+                        cv.notify_all();
+                        t.join();
+                    }
+
+                    catch (...)
+                    {
                     }
 
                     auto duration = std::chrono::high_resolution_clock::now() - begin;
@@ -282,11 +313,19 @@ namespace reaver
                 {
                     std::unique_lock<const reporter> lock(rep);
                     rep.test_started(t);
+                    for (auto && message : output)
+                    {
+                        logger::dlog() << message;
+                    }
                     rep.test_finished(result);
                 }
 
                 else
                 {
+                    for (auto && message : output)
+                    {
+                        logger::dlog() << message;
+                    }
                     rep.test_finished(result);
                 }
 

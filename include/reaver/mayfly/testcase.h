@@ -42,6 +42,15 @@ namespace reaver
             not_found = 5
         };
 
+        class unexpected_result : public exception
+        {
+        public:
+            unexpected_result() : exception{ logger::crash }
+            {
+                *this << "testcase execution resulted in an unknown status code.";
+            }
+        };
+
         struct testcase_result
         {
             std::string name;
