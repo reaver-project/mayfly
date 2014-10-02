@@ -362,7 +362,7 @@ namespace reaver
             return *default_runner;
         }
 
-        constexpr static const char * version_string = "Reaver Project's Mayfly v0.1.1 alpha\nCopyright © 2014 Reaver Project Team\n";
+        constexpr static const char * version_string = "Reaver Project's Mayfly v0.1.2 alpha\nCopyright © 2014 Reaver Project Team\n";
 
         class invalid_testcase_name_format : public exception
         {
