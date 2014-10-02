@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include "mayfly/detail/atexit.h"
 #include "mayfly/suite.h"
 #include "mayfly/testcase.h"
 #include "mayfly/reporter.h"

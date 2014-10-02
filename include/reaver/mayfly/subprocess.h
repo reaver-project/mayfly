@@ -27,6 +27,7 @@
 #include "testcase.h"
 #include "suite.h"
 #include "reporter.h"
+#include "detail/atexit.h"
 
 namespace reaver
 {
@@ -45,19 +46,42 @@ namespace reaver
 
             virtual void test_started(const testcase & t) const override
             {
+                _detail::_default_atexit_registry().atexit(_atexit);
+
+                std::cout << "{{started}}\n";
             }
 
             virtual void test_finished(const testcase_result & result) const override
             {
-                std::cout << static_cast<std::uintmax_t>(result.status) << ' ' << result.description << std::flush;
+                switch (result.status)
+                {
+                    case testcase_status::passed:
+                        break;
+
+                    case testcase_status::failed:
+                        std::cout << "{{failed " << result.description << "}}\n";
+                        break;
+
+                    default:
+                        std::cout << "{{error unexpected test status}}\n";
+                        break;
+                }
+
+                std::cout << "{{finished}}\n";
             }
 
             virtual void summary(const std::vector<std::pair<testcase_status, std::string>> & summary, std::uintmax_t passed, std::uintmax_t total) const override
             {
                 if (!total)
                 {
-                    std::cout << static_cast<std::uintmax_t>(testcase_status::not_found) << std::flush;
+                    std::cout << "{{error not found}}\n";
                 }
+            }
+
+        private:
+            static void _atexit()
+            {
+                std::cout << "{{exit}}\n";
             }
         };
 
