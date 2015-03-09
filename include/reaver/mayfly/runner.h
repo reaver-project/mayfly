@@ -33,6 +33,7 @@
 #include <boost/iostreams/stream.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/range/algorithm/search.hpp>
+#include <boost/optional.hpp>
 
 #include <reaver/thread_pool.h>
 
@@ -95,6 +96,78 @@ namespace reaver
 
             virtual void operator()(const std::vector<suite> & suites, const reporter & rep) override
             {
+                if (!_test_name.empty())
+                {
+                    std::vector<std::string> suite_names;
+                    boost::algorithm::split(suite_names, _test_name, boost::is_any_of("/"));
+                    testcase_result result;
+                    result.status = testcase_status::passed;
+                    result.name = std::move(suite_names.back());
+                    suite_names.pop_back();
+
+                    boost::optional<const testcase &> t;
+
+                    try
+                    {
+                        auto ref = std::ref(*boost::range::find_if(suites, [&](const suite & s){ return s.name() == suite_names.front(); }));
+                        suite_names.erase(suite_names.begin());
+                        for (auto && s : suite_names)
+                        {
+                            ref = std::ref(ref.get()[s]);
+                        }
+                        auto it = std::find_if(ref.get().begin(), ref.get().end(), [&](const testcase & tc){ return tc.name() == result.name; });
+                        if (it == ref.get().end())
+                        {
+                            return;
+                        }
+                        t = *it;
+                    }
+
+                    catch (...)
+                    {
+                        return;
+                    }
+
+                    rep.test_started(*t);
+                    auto begin = std::chrono::high_resolution_clock::now();
+
+                    try
+                    {
+                        (*t)();
+                    }
+
+                    catch (reaver::exception & e)
+                    {
+                        std::ostringstream str;
+
+                        {
+                            reaver::logger::logger l{};
+                            l.add_stream(str);
+                            e.print(l);
+                        }
+
+                        result.status = testcase_status::failed;
+                        result.description = str.str();
+                    }
+
+                    catch (std::exception & e)
+                    {
+                        result.status = testcase_status::failed;
+                        result.description = e.what();
+                    }
+
+                    if (result.status == testcase_status::passed)
+                    {
+                        ++_passed;
+                    }
+                    ++_tests;
+
+                    result.duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - begin);
+                    rep.test_finished(result);
+
+                    return;
+                }
+
                 for (const auto & s : suites)
                 {
                     _handle_suite(s, rep);
@@ -164,150 +237,113 @@ namespace reaver
                     rep.test_started(t);
                 }
 
-                if (boost::join(suite_stack, "/") + "/" + t.name() == _test_name)
+                using namespace boost::process::initializers;
+
+                std::vector<std::string> args{ _executable, "--test", boost::join(suite_stack, "/") + "/" + t.name(), "-r", "subprocess" };
+
+                boost::process::pipe p = boost::process::create_pipe();
+                std::atomic<bool> timeout_flag{ false };
+                std::atomic<bool> finished_flag{ false };
+                std::mutex m;
+                std::condition_variable cv;
+                reaver::joining_thread th;
+
+                auto begin = std::chrono::high_resolution_clock::now();
+
                 {
-                    try
-                    {
-                        t();
-                    }
+                    boost::iostreams::file_descriptor_sink sink{ p.sink, boost::iostreams::close_handle };
 
-                    catch (reaver::exception & e)
-                    {
-                        std::ostringstream str;
+                    auto child = boost::process::execute(set_args(args), inherit_env(), bind_stdout(sink), close_stdin());
 
+                    th = std::thread{ [&]()
+                    {
+                        std::unique_lock<std::mutex> lock{ m };
+                        if (!cv.wait_for(lock, std::chrono::seconds{ _timeout }, [&]() -> bool { return finished_flag; }))
                         {
-                            reaver::logger::logger l{};
-                            l.add_stream(str);
-                            e.print(l);
+                            timeout_flag = true;
+                            boost::process::terminate(child);
+                        }
+                    }};
+                }
+
+                boost::iostreams::file_descriptor_source source{ p.source, boost::iostreams::close_handle };
+                boost::iostreams::stream<boost::iostreams::file_descriptor_source> is(source);
+
+                std::string message;
+
+                enum { not_started, started, finished, exited } state = not_started;
+
+                while (std::getline(is, message))
+                {
+                    if (message.substr(0, 2) == "{{")
+                    {
+                        if (message == "{{started}}")
+                        {
+                            assert(state == not_started);
+                            state = started;
                         }
 
-                        result.status = testcase_status::failed;
-                        result.description = str.str();
+                        else if (message == "{{finished}}")
+                        {
+                            assert(state == started);
+                            state = finished;
+                        }
+
+                        else if (message == "{{exit}}")
+                        {
+                            assert(state == finished);
+                            state = exited;
+                        }
+
+                        else if (message.substr(0, 8) == "{{failed")
+                        {
+                            assert(state == started);
+                            result.status = testcase_status::failed;
+                            result.description = message.substr(9, message.length() - 11);
+                        }
+
+                        else if (message == "{{error unexpected test status}}")
+                        {
+                            throw unexpected_result{};
+                        }
+
+                        else if (message == "{{error not found}}")
+                        {
+                            result.status = testcase_status::not_found;
+                        }
                     }
 
-                    catch (std::exception & e)
+                    else
                     {
-                        result.status = testcase_status::failed;
-                        result.description = e.what();
+                        output.push_back(std::move(message));
                     }
                 }
 
-                else
+                if (state != exited)
                 {
-                    using namespace boost::process::initializers;
-
-                    std::vector<std::string> args{ _executable, "--test", boost::join(suite_stack, "/") + "/" + t.name(), "-r", "subprocess" };
-
-                    boost::process::pipe p = boost::process::create_pipe();
-                    std::atomic<bool> timeout_flag{ false };
-                    std::atomic<bool> finished_flag{ false };
-                    std::mutex m;
-                    std::condition_variable cv;
-                    std::thread t;
-
-                    auto begin = std::chrono::high_resolution_clock::now();
-
+                    if (timeout_flag)
                     {
-                        boost::iostreams::file_descriptor_sink sink{ p.sink, boost::iostreams::close_handle };
-
-                        auto child = boost::process::execute(set_args(args), inherit_env(), bind_stdout(sink), close_stdin());
-
-                        t = std::thread{ [&]()
-                        {
-                            std::unique_lock<std::mutex> lock{ m };
-                            if (!cv.wait_for(lock, std::chrono::seconds{ _timeout }, [&]() -> bool { return finished_flag; }))
-                            {
-                                timeout_flag = true;
-                                boost::process::terminate(child);
-                            }
-                        }};
+                        result.status = testcase_status::timed_out;
                     }
 
-                    boost::iostreams::file_descriptor_source source{ p.source, boost::iostreams::close_handle };
-                    boost::iostreams::stream<boost::iostreams::file_descriptor_source> is(source);
-
-                    std::string message;
-
-                    enum { not_started, started, finished, exited } state = not_started;
-
-                    while (std::getline(is, message))
+                    else
                     {
-                        if (message.substr(0, 2) == "{{")
-                        {
-                            if (message == "{{started}}")
-                            {
-                                assert(state == not_started);
-                                state = started;
-                            }
-
-                            else if (message == "{{finished}}")
-                            {
-                                assert(state == started);
-                                state = finished;
-                            }
-
-                            else if (message == "{{exit}}")
-                            {
-                                assert(state == finished);
-                                state = exited;
-                            }
-
-                            else if (message.substr(0, 8) == "{{failed")
-                            {
-                                assert(state == started);
-                                result.status = testcase_status::failed;
-                                result.description = message.substr(9, message.length() - 11);
-                            }
-
-                            else if (message == "{{error unexpected test status}}")
-                            {
-                                throw unexpected_result{};
-                            }
-
-                            else if (message == "{{error not found}}")
-                            {
-                                result.status = testcase_status::not_found;
-                            }
-                        }
-
-                        else
-                        {
-                            output.push_back(std::move(message));
-                        }
-                    }
-
-                    if (state != exited)
-                    {
-                        if (timeout_flag)
-                        {
-                            result.status = testcase_status::timed_out;
-                        }
-
-                        else
-                        {
-                            result.status = testcase_status::crashed;
-                        }
-                    }
-
-                    try
-                    {
-                        finished_flag = true;
-                        cv.notify_all();
-                        t.join();
-                    }
-
-                    catch (...)
-                    {
-                    }
-
-                    auto duration = std::chrono::high_resolution_clock::now() - begin;
-                    result.duration = std::chrono::duration_cast<std::chrono::milliseconds>(duration);
-
-                    if (t.joinable())
-                    {
-                        t.detach();
+                        result.status = testcase_status::crashed;
                     }
                 }
+
+                try
+                {
+                    finished_flag = true;
+                    cv.notify_all();
+                }
+
+                catch (...)
+                {
+                }
+
+                auto duration = std::chrono::high_resolution_clock::now() - begin;
+                result.duration = std::chrono::duration_cast<std::chrono::milliseconds>(duration);
 
                 if (_threads != 1)
                 {
