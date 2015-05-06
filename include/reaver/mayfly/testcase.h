@@ -79,7 +79,7 @@ namespace reaver
                     _detail::_local_assertions_logger() = _detail::_assertions_logger{ _positive, _assertions_to_fail };
                     _test();
                     _detail::_local_assertions_logger()->throw_exception();
-                    _detail::_local_assertions_logger() = {};
+                    _detail::_local_assertions_logger() = boost::none;
                 }
 
                 catch (expected_failure_exit &)
