@@ -1,7 +1,7 @@
 /**
 * Mayfly License
 *
-* Copyright © 2014 Michał "Griwes" Dominiak
+* Copyright © 2014-2015 Michał "Griwes" Dominiak
 *
 * This software is provided 'as-is', without any express or implied
 * warranty. In no event will the authors be held liable for any damages
@@ -36,6 +36,7 @@
 #include <boost/optional.hpp>
 
 #include <reaver/thread_pool.h>
+#include <reaver/configuration/options.h>
 
 #include "reporter.h"
 #include "testcase.h"
@@ -50,7 +51,7 @@ namespace reaver
         class runner
         {
         public:
-            runner(std::size_t threads = 1, std::size_t timeout = 60, std::string test_name = "") : _threads{ threads }, _timeout{ timeout}, _test_name{ std::move(test_name) }
+            runner(std::size_t threads = 1, std::size_t timeout = 60, boost::optional<std::string> test_name = {}) : _threads{ threads }, _timeout{ timeout}, _test_name{ std::move(test_name) }
             {
             }
 
@@ -78,7 +79,7 @@ namespace reaver
             std::size_t _limit = 0;
             std::size_t _timeout = 60;
 
-            std::string _test_name;
+            boost::optional<std::string> _test_name;
 
             std::atomic<std::uintmax_t> _tests{};
             std::atomic<std::uintmax_t> _passed{};
@@ -89,17 +90,17 @@ namespace reaver
         class subprocess_runner : public runner
         {
         public:
-            subprocess_runner(std::string executable, std::size_t threads = 1, std::size_t timeout = 60, std::string test_name = "") : runner{ threads, timeout, std::move(test_name) },
+            subprocess_runner(std::string executable, std::size_t threads = 1, std::size_t timeout = 60, boost::optional<std::string> test_name = {}) : runner{ threads, timeout, std::move(test_name) },
                 _executable{ std::move(executable) }
             {
             }
 
             virtual void operator()(const std::vector<suite> & suites, const reporter & rep) override
             {
-                if (!_test_name.empty())
+                if (_test_name)
                 {
                     std::vector<std::string> suite_names;
-                    boost::algorithm::split(suite_names, _test_name, boost::is_any_of("/"));
+                    boost::algorithm::split(suite_names, *_test_name, boost::is_any_of("/"));
                     testcase_result result;
                     result.status = testcase_status::passed;
                     result.name = std::move(suite_names.back());
@@ -180,7 +181,7 @@ namespace reaver
             void _handle_suite(const suite & s, const reporter & rep, std::vector<std::string> suite_stack = {})
             {
                 suite_stack.push_back(s.name());
-                if (boost::range::search(_test_name, boost::join(suite_stack, "/")) != _test_name.begin())
+                if (_test_name && boost::range::search(*_test_name, boost::join(suite_stack, "/")) != _test_name->begin())
                 {
                     return;
                 }
@@ -197,7 +198,7 @@ namespace reaver
 
                     for (const auto & test : s)
                     {
-                        if (!_test_name.empty() && boost::join(suite_stack, "/") + "/" + test.name() != _test_name)
+                        if (_test_name && boost::join(suite_stack, "/") + "/" + test.name() != _test_name)
                         {
                             continue;
                         }
@@ -409,12 +410,21 @@ namespace reaver
             }
         };
 
+        namespace options
+        {
+            new_opt_desc(help, void, "help,h", "print this message");
+            new_opt_desc(version, void, "version,v", "print version information");
+
+            new_opt_ext(tasks, std::size_t, opt_name_desc("tasks,j", "specify the amount of worker threads"); static constexpr type default_value = 1; );
+            new_opt_desc(test, boost::optional<std::string>, "test,t", "specify the test to run");
+            new_opt_desc(reporter, std::vector<std::string>, "reporter,r", "select reporters to use");
+            new_opt_desc(quiet, void, "quiet,q", "disable reporters");
+            new_opt_ext(timeout, std::size_t, opt_name_desc("timeout,l", "specify the timeout for tests (in seconds)"); static constexpr type default_value = 10; );
+            new_opt_desc(error, void, "error,e", "only show errors and summary (controls console output)");
+        }
+
         inline int run(const std::vector<suite> & suites, int argc, char ** argv)
         {
-            std::size_t threads = 1;
-            std::size_t timeout = 60;
-            std::string test_name;
-            std::vector<std::string> reporters;
             std::string executable = argv[0];
 
             boost::program_options::variables_map variables;
@@ -426,27 +436,19 @@ namespace reaver
 
             boost::program_options::options_description config("Configuration");
             config.add_options()
-                ("tasks,j", boost::program_options::value<std::size_t>(&threads), "specify the amount of worker threads")
-                ("test,t", boost::program_options::value<std::string>(&test_name), "specify the thread to run")
+                ("tasks,j", boost::program_options::value<std::size_t>(), "specify the amount of worker threads")
+                ("test,t", boost::program_options::value<std::string>(), "specify the thread to run")
                 ("reporter,r", boost::program_options::value<std::vector<std::string>>()->composing(), "select a reporter to use")
                 ("quiet,q", "disable reporters")
-                ("timeout,l", boost::program_options::value<std::size_t>(&timeout), "specify the timeout for tests (in seconds)")
+                ("timeout,l", boost::program_options::value<std::size_t>(), "specify the timeout for tests (in seconds)")
                 ("error,e", "only show errors and summary (controls console output)");
 
             boost::program_options::options_description options;
             options.add(general).add(config);
 
-            boost::program_options::store(boost::program_options::command_line_parser(argc, argv).options(options)
-                .style(boost::program_options::command_line_style::allow_short
-                    | boost::program_options::command_line_style::allow_long
-                    | boost::program_options::command_line_style::allow_sticky
-                    | boost::program_options::command_line_style::allow_dash_for_short
-                    | boost::program_options::command_line_style::long_allow_next
-                    | boost::program_options::command_line_style::short_allow_next
-                    | boost::program_options::command_line_style::allow_long_disguise).run(), variables);
-            boost::program_options::notify(variables);
+            auto parsed = reaver::options::parse_argv(argc, argv, tpl::vector<options::help, options::version, options::tasks, options::test, options::reporter, options::quiet, options::timeout, options::error>{});
 
-            if (variables.count("help"))
+            if (parsed.get<options::help>())
             {
                 std::cout << version_string << '\n';
                 std::cout << general << '\n' << config;
@@ -454,7 +456,7 @@ namespace reaver
                 return 0;
             }
 
-            if (variables.count("version"))
+            if (parsed.get<options::version>())
             {
                 std::cout << version_string;
                 std::cout << "Distributed under modified zlib license.\n\n";
@@ -464,17 +466,13 @@ namespace reaver
                 return 0;
             }
 
-            if (variables.count("reporter"))
-            {
-                reporters = variables["reporter"].as<std::vector<std::string>>();
-            }
-
-            else if (!variables.count("quiet"))
+            auto reporters = parsed.get<options::reporter>();
+            if (reporters.empty() && !parsed.get<options::quiet>())
             {
                 reporters.push_back("console");
             }
 
-            if (variables.count("error"))
+            if (parsed.get<options::error>())
             {
                 reaver::logger::default_logger().set_level(reaver::logger::error);
             }
@@ -485,11 +483,12 @@ namespace reaver
                 reps.emplace_back(std::cref(*reporter_registry().at(elem)));
             }
 
-            if (!test_name.empty() && test_name.find('/') == std::string::npos)
+            auto test_name = parsed.get<options::test>();
+            if (test_name && test_name->find('/') == std::string::npos)
             {
-                if (!variables.count("quiet"))
+                if (!parsed.get<options::quiet>())
                 {
-                    throw invalid_testcase_name_format{ test_name };
+                    throw invalid_testcase_name_format{ *test_name };
                 }
 
                 else
@@ -500,7 +499,7 @@ namespace reaver
             }
 
             auto && reporter = combine(reps);
-            default_runner(std::make_unique<subprocess_runner>(executable, threads, timeout, test_name))(suites, reporter);
+            default_runner(std::make_unique<subprocess_runner>(executable, parsed.get<options::tasks>(), parsed.get<options::timeout>(), test_name))(suites, reporter);
             default_runner().summary(reporter);
 
             if (default_runner().passed() == default_runner().total())
