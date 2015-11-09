@@ -43,6 +43,14 @@ namespace reaver
 
         enum class testcase_status;
 
+        struct tests_summary
+        {
+            const std::vector<std::pair<testcase_status, std::string>> & failed_tests;
+            std::uintmax_t passed;
+            std::uintmax_t total;
+            std::chrono::milliseconds actual_time;
+        };
+
         class invalid_testcase_status : public exception
         {
         public:
@@ -60,7 +68,7 @@ namespace reaver
             virtual void test_started(const testcase &) const = 0;
             virtual void test_finished(const testcase_result &) const = 0;
 
-            virtual void summary(const std::vector<std::pair<testcase_status, std::string>> &, std::uintmax_t passed, std::uintmax_t total) const = 0;
+            virtual void summary(tests_summary) const = 0;
 
             void lock() const
             {
@@ -115,11 +123,11 @@ namespace reaver
                 }
             }
 
-            virtual void summary(const std::vector<std::pair<testcase_status, std::string>> & summary, std::uintmax_t passed, std::uintmax_t total) const override
+            virtual void summary(tests_summary summary) const override
             {
                 for (const auto & r : _reporters)
                 {
-                    r.get().summary(summary, passed, total);
+                    r.get().summary(summary);
                 }
             }
 

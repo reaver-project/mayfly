@@ -80,7 +80,7 @@ namespace reaver
                 reaver::logger::dlog() << "##teamcity[testFinished name='" << name << "' duration='" << result.duration.count() << "']";
             }
 
-            virtual void summary(const std::vector<std::pair<testcase_status, std::string>> & summary, std::uintmax_t passed, std::uintmax_t total) const override
+            virtual void summary(tests_summary) const override
             {
             }
         };

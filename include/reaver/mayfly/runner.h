@@ -71,7 +71,7 @@ namespace reaver
 
             auto summary(const reporter & rep) const
             {
-                rep.summary(_failed, _passed, _tests);
+                rep.summary({ _failed, _passed, _tests, _last_actual_time });
             }
 
         protected:
@@ -85,6 +85,7 @@ namespace reaver
             std::atomic<std::uintmax_t> _passed{};
 
             std::vector<std::pair<testcase_status, std::string>> _failed;
+            std::chrono::milliseconds _last_actual_time;
         };
 
         class subprocess_runner : public runner
@@ -169,10 +170,12 @@ namespace reaver
                     return;
                 }
 
+                auto start = std::chrono::high_resolution_clock::now();
                 for (const auto & s : suites)
                 {
                     _handle_suite(s, rep);
                 }
+                _last_actual_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
             }
 
         private:
