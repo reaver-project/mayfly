@@ -210,7 +210,9 @@ namespace reaver
 
 #define MAYFLY_REQUIRE_THROWS(...)                                                                                     \
     try { __VA_ARGS__; ::reaver::mayfly::log_assertion(::std::string{ #__VA_ARGS__ " should have thrown, but didn't" } \
-        + " (in " + __FILE__ + " at line " + ::std::to_string(__LINE__) + ")", true); } catch (...) {}
+        + " (in " + __FILE__ + " at line " + ::std::to_string(__LINE__) + ")", true); }                                \
+    catch (::reaver::mayfly::assertions_failed & ex) { throw; }                                                        \
+    catch (...) {}
 
 #define MAYFLY_CHECK_THROWS(...)                                                                                      \
     try { __VA_ARGS__; ::reaver::mayfly::log_assertion(::std::string{ #__VA_ARGS__ " should have thrown, but didn't"} \
@@ -220,6 +222,7 @@ namespace reaver
     try { __VA_ARGS__; ::reaver::mayfly::log_assertion(::std::string{ #__VA_ARGS__ " should have thrown " #type ", but didn't throw anything" } \
         + " (in " + __FILE__ + " at line " + ::std::to_string(__LINE__) + ")", true); }                                                         \
     catch (type & e) {}                                                                                                                         \
+    catch (::reaver::mayfly::assertions_failed & ex) { throw; }                                                                                 \
     catch (...) { ::reaver::mayfly::log_assertion(::std::string{ #__VA_ARGS__ " should have thrown " #type ", but has thrown something else" }  \
         + " (in " + __FILE__ + " at line " + ::std::to_string(__LINE__) + ")", true); }
 
