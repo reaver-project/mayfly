@@ -1,6 +1,6 @@
-CXX = g++
-LD = g++
-CXXFLAGS += -O0 -Wall -std=c++1y -MD -fPIC -Wno-unused-parameter -fno-omit-frame-pointer -Wno-error=unused-variable
+CXX = c++
+LD = c++
+CXXFLAGS += -O0 -Wall -std=c++1z -MD -fPIC -Wno-unused-parameter -fno-omit-frame-pointer -Wno-error=unused-variable
 SOFLAGS += -shared
 LDFLAGS +=
 LIBRARIES +=
