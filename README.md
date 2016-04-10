@@ -7,13 +7,8 @@ closely integrated with Despayre, the Reaver Project's build system.
 
 ## Supported compilers
 
-Currently supported compilers include GCC 4.9+ and Clang 3.5+, both with libstdc++
-and libc++.
+Currently supported compilers include GCC 5.1+ and Clang 3.7+, both with libstdc++
+and libc++, and with Boost 1.60.0+. It probably also works on lower versions, but
+no such compatibility will be checked and maintained.
 
-CI status:
-
- * Clang: <a href="http://ci.reaver-project.org/viewType.html?buildTypeId=mayfly_TestBuildWithClang&guest=1">
-    <img src="http://ci.reaver-project.org/app/rest/builds/buildType:(id:mayfly_TestBuildWithClang)/statusIcon"></a>
- * GCC: <a href="http://ci.reaver-project.org/viewType.html?buildTypeId=mayfly_TestBuildWithGcc&guest=1">
-    <img src="http://ci.reaver-project.org/app/rest/builds/buildType:(id:mayfly_TestBuildWithGcc)/statusIcon"></a>
-
+CI status can be checked on [Reaver Project's TeamCity server](http://ci.reaver-project.org/viewType.html?buildTypeId=mayfly_Tests&guest=1).
