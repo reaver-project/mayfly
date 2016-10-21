@@ -1,5 +1,7 @@
 # Mayfly
 
+[![Join the chat at https://gitter.im/reaver-project/Mayfly](https://badges.gitter.im/reaver-project/Mayfly.svg)](https://gitter.im/reaver-project/Mayfly?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Mayfly is the Reaver Project's testing framework. It's meant to be lightweight and
 benefit from as many modern C++ features as possible. Primary goals for Mayfly are
 to be fast, generate readable outputs (and TeamCity-ready results) and later get
