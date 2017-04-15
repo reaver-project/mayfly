@@ -81,7 +81,7 @@ namespace reaver
                 }
             }
 
-            virtual void summary(tests_summary summary) const override
+            virtual void summary(const tests_summary & summary) const override
             {
                 auto && white = style::style(style::colors::bgray, style::colors::def, style::styles::bold);
                 auto && red = style::style(style::colors::bred, style::colors::def, style::styles::bold);
@@ -157,10 +157,7 @@ namespace reaver
                     reaver::logger::dlog() << yellow << "Timed out" << white << ": " << to_string_width(timed_out, width) << " / " << summary.total;
                 }
 
-                if (summary.actual_time.count())
-                {
-                    reaver::logger::dlog() << green << "Clock time taken" << white << ": " << summary.actual_time.count() << "ms.";
-                }
+                reaver::logger::dlog() << green << "Clock time taken" << white << ": " << summary.actual_time.count() << "ms.";
             }
         };
 

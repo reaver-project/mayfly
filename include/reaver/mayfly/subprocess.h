@@ -70,7 +70,7 @@ namespace reaver
                 std::cout << "{{finished}}\n";
             }
 
-            virtual void summary(tests_summary summary) const override
+            virtual void summary(const tests_summary & summary) const override
             {
                 if (!summary.total)
                 {

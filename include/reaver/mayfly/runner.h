@@ -1,7 +1,7 @@
 /**
 * Mayfly License
 *
-* Copyright © 2014-2015 Michał "Griwes" Dominiak
+* Copyright © 2014-2015, 2017 Michał "Griwes" Dominiak
 *
 * This software is provided 'as-is', without any express or implied
 * warranty. In no event will the authors be held liable for any damages
@@ -86,7 +86,7 @@ namespace reaver
             std::atomic<std::uintmax_t> _passed{};
 
             std::vector<std::pair<testcase_status, std::string>> _failed;
-            std::chrono::milliseconds _last_actual_time;
+            std::chrono::milliseconds _last_actual_time{ 0 };
         };
 
         class subprocess_runner : public runner
@@ -166,15 +166,19 @@ namespace reaver
                     ++_tests;
 
                     result.duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - begin);
+                    _last_actual_time = result.duration;
                     rep.test_finished(result);
 
                     return;
                 }
 
                 auto start = std::chrono::high_resolution_clock::now();
-                for (const auto & s : suites)
                 {
-                    _handle_suite(s, rep);
+                    std::unique_ptr<thread_pool> pool = _threads > 1 ? std::make_unique<thread_pool>(_threads) : nullptr;
+                    for (const auto & s : suites)
+                    {
+                        _handle_suite(pool.get(), s, rep);
+                    }
                 }
                 _last_actual_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
             }
@@ -182,34 +186,35 @@ namespace reaver
         private:
             std::string _executable;
 
-            void _handle_suite(const suite & s, const reporter & rep, std::vector<std::string> suite_stack = {})
+            void _handle_suite(thread_pool * pool, const suite & s, const reporter & rep, std::vector<std::reference_wrapper<const suite>> suite_stack = {})
             {
-                suite_stack.push_back(s.name());
-                if (_test_name && boost::range::search(*_test_name, boost::join(suite_stack, "/")) != _test_name->begin())
+                suite_stack.push_back(s);
+                if (_test_name && boost::range::search(*_test_name, boost::join(fmap(suite_stack, [](auto && s){ return s.get().name(); }), "/")) != _test_name->begin())
                 {
                     return;
                 }
 
-                rep.suite_started(s);
+                if (!pool)
+                {
+                    rep.suite_started(suite_stack.back().get());
+                }
 
                 for (const auto & sub : s.suites())
                 {
-                    _handle_suite(sub, rep, suite_stack);
+                    _handle_suite(pool, sub, rep, suite_stack);
                 }
 
                 {
-                    thread_pool pool(_threads);
-
                     for (const auto & test : s)
                     {
-                        if (_test_name && boost::join(suite_stack, "/") + "/" + test.name() != _test_name)
+                        if (_test_name && boost::join(fmap(suite_stack, [](auto && s){ return s.get().name(); }), "/") + "/" + test.name() != _test_name)
                         {
                             continue;
                         }
 
                         ++_tests;
 
-                        pool.push([=, &rep]()
+                        auto callback = [=, &rep]()
                         {
                             auto result = _run_test(test, s, rep, suite_stack);
 
@@ -220,16 +225,29 @@ namespace reaver
 
                             else
                             {
-                                _failed.push_back(std::make_pair(result.status, boost::join(suite_stack, "/") + "/" + test.name()));
+                                _failed.push_back(std::make_pair(result.status, boost::join(fmap(suite_stack, [](auto && s){ return s.get().name(); }), "/") + "/" + test.name()));
                             }
-                        });
+                        };
+
+                        if (pool)
+                        {
+                            pool->push(callback);
+                        }
+
+                        else
+                        {
+                            callback();
+                        }
                     }
                 }
 
-                rep.suite_finished(s);
+                if (!pool)
+                {
+                    rep.suite_finished(suite_stack.back().get());
+                }
             }
 
-            testcase_result _run_test(const testcase & t, const suite & s, const reporter & rep, const std::vector<std::string> & suite_stack) const
+            testcase_result _run_test(const testcase & t, const suite & s, const reporter & rep, std::vector<std::reference_wrapper<const suite>> suite_stack) const
             {
                 testcase_result result;
                 result.name = t.name();
@@ -244,7 +262,7 @@ namespace reaver
 
                 using namespace boost::process::initializers;
 
-                std::vector<std::string> args{ _executable, "--test", boost::join(suite_stack, "/") + "/" + t.name(), "-r", "subprocess" };
+                std::vector<std::string> args{ _executable, "--test", boost::join(fmap(suite_stack, [](auto && s){ return s.get().name(); }), "/") + "/" + t.name(), "-r", "subprocess" };
 
                 boost::process::pipe p = boost::process::create_pipe();
                 std::atomic<bool> timeout_flag{ false };
@@ -353,12 +371,20 @@ namespace reaver
                 if (_threads != 1)
                 {
                     std::unique_lock<const reporter> lock(rep);
+                    for (auto && s : suite_stack)
+                    {
+                        rep.suite_started(s);
+                    }
                     rep.test_started(t);
                     for (auto && message : output)
                     {
                         logger::dlog() << message;
                     }
                     rep.test_finished(result);
+                    for (auto && s : suite_stack)
+                    {
+                        rep.suite_finished(s);
+                    }
                 }
 
                 else
@@ -403,7 +429,7 @@ namespace reaver
             return *default_runner;
         }
 
-        constexpr static const char * version_string = "Reaver Project's Mayfly v0.1.2 alpha\nCopyright © 2014 Reaver Project Team\n";
+        constexpr static const char * version_string = "Reaver Project's Mayfly v0.1.2 alpha\nCopyright © 2014, 2017 Reaver Project Team\n";
 
         class invalid_testcase_name_format : public exception
         {

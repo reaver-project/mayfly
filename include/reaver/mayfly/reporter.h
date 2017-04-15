@@ -48,7 +48,7 @@ namespace reaver
             const std::vector<std::pair<testcase_status, std::string>> & failed_tests;
             std::uintmax_t passed;
             std::uintmax_t total;
-            std::chrono::milliseconds actual_time;
+            std::chrono::milliseconds actual_time{ 0 };
         };
 
         class invalid_testcase_status : public exception
@@ -63,12 +63,14 @@ namespace reaver
         class reporter
         {
         public:
+            virtual ~reporter() = default;
+
             virtual void suite_started(const suite &) const = 0;
             virtual void suite_finished(const suite &) const = 0;
             virtual void test_started(const testcase &) const = 0;
             virtual void test_finished(const testcase_result &) const = 0;
 
-            virtual void summary(tests_summary) const = 0;
+            virtual void summary(const tests_summary &) const = 0;
 
             void lock() const
             {
@@ -123,7 +125,7 @@ namespace reaver
                 }
             }
 
-            virtual void summary(tests_summary summary) const override
+            virtual void summary(const tests_summary & summary) const override
             {
                 for (const auto & r : _reporters)
                 {
