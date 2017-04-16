@@ -281,6 +281,11 @@ namespace reaver
                     th = std::thread{ [&]()
                     {
                         std::unique_lock<std::mutex> lock{ m };
+                        if (finished_flag)
+                        {
+                            return;
+                        }
+
                         if (!cv.wait_for(lock, std::chrono::seconds{ _timeout }, [&]() -> bool { return finished_flag; }))
                         {
                             timeout_flag = true;
@@ -357,6 +362,7 @@ namespace reaver
 
                 try
                 {
+                    std::unique_lock<std::mutex> lock{ m };
                     finished_flag = true;
                     cv.notify_all();
                 }
