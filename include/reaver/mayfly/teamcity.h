@@ -1,7 +1,7 @@
 /**
  * Mayfly License
  *
- * Copyright © 2014 Michał "Griwes" Dominiak
+ * Copyright © 2014-2015 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -80,7 +80,7 @@ namespace reaver
                 reaver::logger::dlog() << "##teamcity[testFinished name='" << name << "' duration='" << result.duration.count() << "']";
             }
 
-            virtual void summary(const std::vector<std::pair<testcase_status, std::string>> & summary, std::uintmax_t passed, std::uintmax_t total) const override
+            virtual void summary(const tests_summary &) const override
             {
             }
         };

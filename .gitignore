@@ -4,3 +4,5 @@ mayfly-test
 *.kate-swp
 *.d
 *.so
+tags
+tests/test

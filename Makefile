@@ -1,6 +1,6 @@
-CXX = g++
-LD = g++
-CXXFLAGS += -Os -Wall -std=c++1y -MD -fPIC -Wno-unused-parameter
+CXX = c++
+LD = c++
+CXXFLAGS += -O0 -Wall -std=c++1z -MD -fPIC -Wno-unused-parameter -fno-omit-frame-pointer -Wno-error=unused-variable -g
 SOFLAGS += -shared
 LDFLAGS +=
 LIBRARIES +=
@@ -34,7 +34,7 @@ INCLUDEDIR ?= $(PREFIX)/include
 test: ./tests/test
 
 ./tests/test: $(TESTOBJ) $(LIBRARY)
-	$(LD) $(CXXFLAGS) $(LDFLAGS) $(TESTOBJ) -o $@ $(LIBRARIES) -lboost_system -lboost_iostreams -lboost_program_options -lboost_filesystem -ldl -pthread
+	$(LD) $(CXXFLAGS) $(LDFLAGS) $(TESTOBJ) -o $@ $(LIBRARIES) -lboost_system -lboost_program_options -lboost_filesystem -ldl -pthread
 
 install: $(LIBRARY) # $(EXECUTABLE)
 #	@cp $(EXECUTABLE) $(DESTDIR)$(BINDIR)/$(EXECUTABLE)

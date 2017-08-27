@@ -1,7 +1,7 @@
 /**
 * Mayfly License
 *
-* Copyright © 2014 Michał "Griwes" Dominiak
+* Copyright © 2014-2015 Michał "Griwes" Dominiak
 *
 * This software is provided 'as-is', without any express or implied
 * warranty. In no event will the authors be held liable for any damages
@@ -81,7 +81,7 @@ namespace reaver
                 }
             }
 
-            virtual void summary(const std::vector<std::pair<testcase_status, std::string>> & summary, std::uintmax_t passed, std::uintmax_t total) const override
+            virtual void summary(const tests_summary & summary) const override
             {
                 auto && white = style::style(style::colors::bgray, style::colors::def, style::styles::bold);
                 auto && red = style::style(style::colors::bred, style::colors::def, style::styles::bold);
@@ -91,12 +91,12 @@ namespace reaver
                 std::uintmax_t crashed = 0;
                 std::uintmax_t timed_out = 0;
 
-                if (summary.size())
+                if (summary.failed_tests.size())
                 {
                     reaver::logger::dlog() << white << "\nSummary:";
                 }
 
-                for (const auto & elem : summary)
+                for (const auto & elem : summary.failed_tests)
                 {
                     switch (elem.first)
                     {
@@ -119,43 +119,45 @@ namespace reaver
                     }
                 }
 
-                if (summary.size())
+                if (summary.failed_tests.size())
                 {
                     reaver::logger::dlog();
                 }
 
-                if (!total)
+                if (!summary.total)
                 {
                     reaver::logger::dlog() << white << "No tests found.";
                     return;
                 }
 
-                if (passed == total)
+                if (summary.passed == summary.total)
                 {
                     reaver::logger::dlog() << green << "All tests passed!";
                 }
 
-                auto width = std::to_string(total).size();
+                auto width = std::to_string(summary.total).size();
 
-                if (passed)
+                if (summary.passed)
                 {
-                    reaver::logger::dlog() << green << "Passed" <<  white << ":    " << to_string_width(passed, width) << " / " << total;
+                    reaver::logger::dlog() << green << "Passed" <<  white << ":    " << to_string_width(summary.passed, width) << " / " << summary.total;
                 }
 
-                if (total - passed - crashed - timed_out)
+                if (summary.total - summary.passed - crashed - timed_out)
                 {
-                    reaver::logger::dlog() << red << "Failed" <<  white << ":    " << to_string_width(total - passed - crashed - timed_out, width) << " / " << total;
+                    reaver::logger::dlog() << red << "Failed" <<  white << ":    " << to_string_width(summary.total - summary.passed - crashed - timed_out, width) << " / " << summary.total;
                 }
 
                 if (crashed)
                 {
-                    reaver::logger::dlog() << red << "Crashed" <<  white << ":   " << to_string_width(crashed, width) << " / " << total;
+                    reaver::logger::dlog() << red << "Crashed" <<  white << ":   " << to_string_width(crashed, width) << " / " << summary.total;
                 }
 
                 if (timed_out)
                 {
-                    reaver::logger::dlog() << yellow << "Timed out" << white << ": " << to_string_width(timed_out, width) << " / " << total;
+                    reaver::logger::dlog() << yellow << "Timed out" << white << ": " << to_string_width(timed_out, width) << " / " << summary.total;
                 }
+
+                reaver::logger::dlog() << green << "Clock time taken" << white << ": " << summary.actual_time.count() << "ms.";
             }
         };
 

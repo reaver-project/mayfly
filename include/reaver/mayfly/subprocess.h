@@ -1,7 +1,7 @@
 /**
  * Mayfly License
  *
- * Copyright © 2014 Michał "Griwes" Dominiak
+ * Copyright © 2014-2015 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -36,15 +36,15 @@ namespace reaver
         class subprocess_reporter : public reporter
         {
         public:
-            virtual void suite_started(const suite & s) const override
+            virtual void suite_started(const suite &) const override
             {
             }
 
-            virtual void suite_finished(const suite & s) const override
+            virtual void suite_finished(const suite &) const override
             {
             }
 
-            virtual void test_started(const testcase & t) const override
+            virtual void test_started(const testcase &) const override
             {
                 _detail::_default_atexit_registry().atexit(_atexit);
 
@@ -70,9 +70,9 @@ namespace reaver
                 std::cout << "{{finished}}\n";
             }
 
-            virtual void summary(const std::vector<std::pair<testcase_status, std::string>> & summary, std::uintmax_t passed, std::uintmax_t total) const override
+            virtual void summary(const tests_summary & summary) const override
             {
-                if (!total)
+                if (!summary.total)
                 {
                     std::cout << "{{error not found}}\n";
                 }

@@ -1,7 +1,7 @@
 /**
  * Mayfly License
  *
- * Copyright © 2014 Michał "Griwes" Dominiak
+ * Copyright © 2014-2015 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -138,11 +138,35 @@ namespace reaver
                 std::size_t _assertions_to_fail;
             };
 
-            inline boost::optional<_assertions_logger> & _local_assertions_logger()
+            inline boost::optional<_assertions_logger> & _local_assertions_logger(std::thread::id id)
             {
                 static std::unordered_map<std::thread::id, boost::optional<_assertions_logger>> loggers;
 
-                return loggers[std::this_thread::get_id()];
+                return loggers[id];
+            }
+
+            inline auto _main_test_thread(boost::optional<std::thread::id> set = {})
+            {
+                static std::unordered_map<std::thread::id, std::thread::id> map;
+
+                auto id = std::this_thread::get_id();
+
+                if (set)
+                {
+                    map[id] = *set;
+                }
+
+                if (map.find(id) == map.end())
+                {
+                    map[id] = id;
+                }
+
+                return map[id];
+            }
+
+            inline auto & _local_assertions_logger()
+            {
+                return _local_assertions_logger(_main_test_thread());
             }
         }
 
@@ -186,7 +210,9 @@ namespace reaver
 
 #define MAYFLY_REQUIRE_THROWS(...)                                                                                     \
     try { __VA_ARGS__; ::reaver::mayfly::log_assertion(::std::string{ #__VA_ARGS__ " should have thrown, but didn't" } \
-        + " (in " + __FILE__ + " at line " + ::std::to_string(__LINE__) + ")", true); } catch (...) {}
+        + " (in " + __FILE__ + " at line " + ::std::to_string(__LINE__) + ")", true); }                                \
+    catch (::reaver::mayfly::assertions_failed & ex) { throw; }                                                        \
+    catch (...) {}
 
 #define MAYFLY_CHECK_THROWS(...)                                                                                      \
     try { __VA_ARGS__; ::reaver::mayfly::log_assertion(::std::string{ #__VA_ARGS__ " should have thrown, but didn't"} \
@@ -196,6 +222,7 @@ namespace reaver
     try { __VA_ARGS__; ::reaver::mayfly::log_assertion(::std::string{ #__VA_ARGS__ " should have thrown " #type ", but didn't throw anything" } \
         + " (in " + __FILE__ + " at line " + ::std::to_string(__LINE__) + ")", true); }                                                         \
     catch (type & e) {}                                                                                                                         \
+    catch (::reaver::mayfly::assertions_failed & ex) { throw; }                                                                                 \
     catch (...) { ::reaver::mayfly::log_assertion(::std::string{ #__VA_ARGS__ " should have thrown " #type ", but has thrown something else" }  \
         + " (in " + __FILE__ + " at line " + ::std::to_string(__LINE__) + ")", true); }
 
@@ -213,3 +240,12 @@ namespace reaver
 #define MAYFLY_CHECK_NOTHROW(...)                                                                                             \
     try { __VA_ARGS__; } catch (...) { ::reaver::mayfly::log_assertion(::std::string{ #__VA_ARGS__ " shouldn't have thrown" } \
         + " (in " + __FILE__ + " at line " + ::std::to_string(__LINE__) + ")"); }
+
+// multithreaded checks support
+
+#define MAYFLY_MAIN_THREAD \
+    auto _mayfly_main_thread_logger = std::this_thread::get_id()
+
+#define MAYFLY_THREAD \
+    ::reaver::mayfly::_detail::_main_test_thread(_mayfly_main_thread_logger)
+

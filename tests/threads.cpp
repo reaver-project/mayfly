@@ -19,3 +19,20 @@
  * 3. This notice may not be removed or altered from any source distribution.
  *
  **/
+
+#include "mayfly.h"
+
+MAYFLY_BEGIN_SUITE("threads support");
+
+MAYFLY_ADD_NEGATIVE_TESTCASE_N("multithreaded assertions", 1, []()
+{
+    MAYFLY_MAIN_THREAD;
+
+    std::thread{ [&](){
+        MAYFLY_THREAD;
+        MAYFLY_CHECK(false);
+    }}.join();
+});
+
+MAYFLY_END_SUITE;
+
