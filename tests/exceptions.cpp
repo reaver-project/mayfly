@@ -24,83 +24,41 @@
 
 namespace
 {
-    void doesnt_throw()
-    {
-    }
+void doesnt_throw()
+{
+}
 }
 
 MAYFLY_BEGIN_SUITE("assertions");
 MAYFLY_BEGIN_SUITE("exceptions-related assertions");
 
-MAYFLY_ADD_TESTCASE("check throws", []
-{
-    MAYFLY_CHECK_THROWS(throw 1);
-});
+MAYFLY_ADD_TESTCASE("check throws", [] { MAYFLY_CHECK_THROWS(throw 1); });
 
-MAYFLY_ADD_TESTCASE("check throws type", []
-{
-    MAYFLY_CHECK_THROWS_TYPE(int, throw 1);
-});
+MAYFLY_ADD_TESTCASE("check throws type", [] { MAYFLY_CHECK_THROWS_TYPE(int, throw 1); });
 
-MAYFLY_ADD_TESTCASE("check nothrow", []
-{
-    MAYFLY_CHECK_NOTHROW(doesnt_throw());
-});
+MAYFLY_ADD_TESTCASE("check nothrow", [] { MAYFLY_CHECK_NOTHROW(doesnt_throw()); });
 
-MAYFLY_ADD_TESTCASE("require throws", []
-{
-    MAYFLY_REQUIRE_THROWS(throw 1);
-});
+MAYFLY_ADD_TESTCASE("require throws", [] { MAYFLY_REQUIRE_THROWS(throw 1); });
 
-MAYFLY_ADD_TESTCASE("require throws type", []
-{
-    MAYFLY_REQUIRE_THROWS_TYPE(int, throw 1);
-});
+MAYFLY_ADD_TESTCASE("require throws type", [] { MAYFLY_REQUIRE_THROWS_TYPE(int, throw 1); });
 
-MAYFLY_ADD_TESTCASE("require nothrow", []
-{
-    MAYFLY_REQUIRE_NOTHROW(doesnt_throw());
-});
+MAYFLY_ADD_TESTCASE("require nothrow", [] { MAYFLY_REQUIRE_NOTHROW(doesnt_throw()); });
 
-MAYFLY_ADD_NEGATIVE_TESTCASE("failed check throws", []
-{
-    MAYFLY_CHECK_THROWS(doesnt_throw());
-});
+MAYFLY_ADD_NEGATIVE_TESTCASE("failed check throws", [] { MAYFLY_CHECK_THROWS(doesnt_throw()); });
 
-MAYFLY_ADD_NEGATIVE_TESTCASE("failed check throws type", []
-{
-    MAYFLY_CHECK_THROWS_TYPE(int, doesnt_throw());
-});
+MAYFLY_ADD_NEGATIVE_TESTCASE("failed check throws type", [] { MAYFLY_CHECK_THROWS_TYPE(int, doesnt_throw()); });
 
-MAYFLY_ADD_NEGATIVE_TESTCASE("failed check nothrow", []
-{
-    MAYFLY_CHECK_NOTHROW(throw 1);
-});
+MAYFLY_ADD_NEGATIVE_TESTCASE("failed check nothrow", [] { MAYFLY_CHECK_NOTHROW(throw 1); });
 
-MAYFLY_ADD_NEGATIVE_TESTCASE("failed require throws", []
-{
-    MAYFLY_REQUIRE_THROWS(doesnt_throw());
-});
+MAYFLY_ADD_NEGATIVE_TESTCASE("failed require throws", [] { MAYFLY_REQUIRE_THROWS(doesnt_throw()); });
 
-MAYFLY_ADD_NEGATIVE_TESTCASE("failed require throws type", []
-{
-    MAYFLY_REQUIRE_THROWS_TYPE(int, doesnt_throw());
-});
+MAYFLY_ADD_NEGATIVE_TESTCASE("failed require throws type", [] { MAYFLY_REQUIRE_THROWS_TYPE(int, doesnt_throw()); });
 
-MAYFLY_ADD_NEGATIVE_TESTCASE("failed require nothrow", []
-{
-    MAYFLY_REQUIRE_NOTHROW(throw 1);
-});
+MAYFLY_ADD_NEGATIVE_TESTCASE("failed require nothrow", [] { MAYFLY_REQUIRE_NOTHROW(throw 1); });
 
-MAYFLY_ADD_NEGATIVE_TESTCASE("check throws type mismatch", []
-{
-    MAYFLY_CHECK_THROWS_TYPE(int, throw false);
-});
+MAYFLY_ADD_NEGATIVE_TESTCASE("check throws type mismatch", [] { MAYFLY_CHECK_THROWS_TYPE(int, throw false); });
 
-MAYFLY_ADD_NEGATIVE_TESTCASE("require throws type mismatch", []
-{
-    MAYFLY_REQUIRE_THROWS_TYPE(int, throw false);
-});
+MAYFLY_ADD_NEGATIVE_TESTCASE("require throws type mismatch", [] { MAYFLY_REQUIRE_THROWS_TYPE(int, throw false); });
 
 MAYFLY_END_SUITE;
 MAYFLY_END_SUITE;

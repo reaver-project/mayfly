@@ -22,15 +22,17 @@
 
 #pragma once
 
-#include <string>
-#include <functional>
 #include <chrono>
+#include <functional>
+#include <string>
 
 #include "asserts.h"
 
 namespace reaver
 {
-    namespace mayfly { inline namespace _v1
+namespace mayfly
+{
+    inline namespace _v1
     {
         enum class testcase_status
         {
@@ -62,8 +64,8 @@ namespace reaver
         class testcase
         {
         public:
-            testcase(std::string name, std::function<void ()> test, bool positive = true, std::size_t assertions_to_fail = 0) : _name{ std::move(name) }, _test{ std::move(test) },
-                _positive{ positive }, _assertions_to_fail{ assertions_to_fail }
+            testcase(std::string name, std::function<void()> test, bool positive = true, std::size_t assertions_to_fail = 0)
+                : _name{ std::move(name) }, _test{ std::move(test) }, _positive{ positive }, _assertions_to_fail{ assertions_to_fail }
             {
             }
 
@@ -89,9 +91,10 @@ namespace reaver
 
         private:
             std::string _name;
-            std::function<void ()> _test;
+            std::function<void()> _test;
             bool _positive;
             std::size_t _assertions_to_fail;
         };
-    }}
+    }
+}
 }

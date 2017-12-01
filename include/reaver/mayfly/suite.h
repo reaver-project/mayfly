@@ -22,28 +22,30 @@
 
 #pragma once
 
-#include <string>
-#include <vector>
 #include <functional>
+#include <sstream>
+#include <string>
 #include <unordered_map>
 #include <unordered_set>
-#include <sstream>
+#include <vector>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/range/algorithm/find_if.hpp>
 
-#include "testcase.h"
 #include "reporter.h"
+#include "testcase.h"
 
 namespace reaver
 {
-    namespace mayfly { inline namespace _v1
+namespace mayfly
+{
+    inline namespace _v1
     {
         class suite
         {
         public:
-            suite(std::string name, std::vector<testcase> testcases = {}, std::vector<suite> suites = {}) : _name{ std::move(name) }, _testcases{ std::move(testcases) },
-                _suites{ std::move(suites) }
+            suite(std::string name, std::vector<testcase> testcases = {}, std::vector<suite> suites = {})
+                : _name{ std::move(name) }, _testcases{ std::move(testcases) }, _suites{ std::move(suites) }
             {
             }
 
@@ -65,7 +67,7 @@ namespace reaver
                 (*this)[parent].add(std::move(t), std::move(parent_path));
             }
 
-            void add(std::string name, std::function<void ()> testcase)
+            void add(std::string name, std::function<void()> testcase)
             {
                 add({ std::move(name), std::move(testcase) });
             }
@@ -95,7 +97,7 @@ namespace reaver
 
             suite & operator[](const std::string & name)
             {
-                auto it = boost::range::find_if(_suites, [&](auto && arg){ return arg.name() == name; });
+                auto it = boost::range::find_if(_suites, [&](auto && arg) { return arg.name() == name; });
 
                 if (it == _suites.end())
                 {
@@ -107,7 +109,7 @@ namespace reaver
 
             const suite & operator[](const std::string & name) const
             {
-                auto it = boost::range::find_if(_suites, [&](auto && arg){ return arg.name() == name; });
+                auto it = boost::range::find_if(_suites, [&](auto && arg) { return arg.name() == name; });
 
                 if (it == _suites.end())
                 {
@@ -219,7 +221,7 @@ namespace reaver
 
                 auto parent = std::move(path_parts.front());
                 path_parts.pop_front();
-                boost::range::find_if(_suites, [&](auto && arg){ return arg.name() == parent; })->add(std::move(s), std::move(path_parts));
+                boost::range::find_if(_suites, [&](auto && arg) { return arg.name() == parent; })->add(std::move(s), std::move(path_parts));
             }
 
             void add(const std::string & suite_name, testcase t)
@@ -239,7 +241,7 @@ namespace reaver
 
                 auto parent = std::move(path_parts.front());
                 path_parts.pop_front();
-                boost::range::find_if(_suites, [&](auto && arg){ return arg.name() == parent; })->add(std::move(t), std::move(path_parts));
+                boost::range::find_if(_suites, [&](auto && arg) { return arg.name() == parent; })->add(std::move(t), std::move(path_parts));
 
                 _testcases[suite_name].emplace(t.name());
             }
@@ -302,45 +304,61 @@ namespace reaver
                 }
             }
         };
-    }}
+    }
+}
 }
 
-#define MAYFLY_ADD_SUITE(name) \
-    namespace { static ::reaver::mayfly::suite_registrar MAYFLY_DETAIL_UNIQUE_NAME { ::reaver::mayfly::suite { name }, reaver_mayfly_suite_path }; }
+#define MAYFLY_ADD_SUITE(name)                                                                                                                                 \
+    namespace                                                                                                                                                  \
+    {                                                                                                                                                          \
+        static ::reaver::mayfly::suite_registrar MAYFLY_DETAIL_UNIQUE_NAME{ ::reaver::mayfly::suite{ name }, reaver_mayfly_suite_path };                       \
+    }
 
-#define MAYFLY_ADD_TESTCASE_TO(suite, test, ...)                                                                            \
-    namespace { static ::reaver::mayfly::testcase_registrar MAYFLY_DETAIL_UNIQUE_NAME { suite, ::reaver::mayfly::testcase { \
-        test, __VA_ARGS__ } }; }
+#define MAYFLY_ADD_TESTCASE_TO(suite, test, ...)                                                                                                               \
+    namespace                                                                                                                                                  \
+    {                                                                                                                                                          \
+        static ::reaver::mayfly::testcase_registrar MAYFLY_DETAIL_UNIQUE_NAME{ suite, ::reaver::mayfly::testcase{ test, __VA_ARGS__ } };                       \
+    }
 
-#define MAYFLY_BEGIN_SUITE(name)                                                                                              \
-    MAYFLY_ADD_SUITE(name)                                                                                                    \
-    namespace { namespace MAYFLY_DETAIL_UNIQUE_NAME { static const std::string reaver_mayfly_suite_name = name;               \
-        static const std::string reaver_mayfly_suite_path_ref = reaver_mayfly_suite_path;                                     \
-        static const std::string reaver_mayfly_suite_path = reaver_mayfly_suite_path_ref.empty() ? reaver_mayfly_suite_name : \
-            reaver_mayfly_suite_path_ref + "/" + reaver_mayfly_suite_name;
+#define MAYFLY_BEGIN_SUITE(name)                                                                                                                               \
+    MAYFLY_ADD_SUITE(name)                                                                                                                                     \
+    namespace                                                                                                                                                  \
+    {                                                                                                                                                          \
+        namespace MAYFLY_DETAIL_UNIQUE_NAME                                                                                                                    \
+        {                                                                                                                                                      \
+            static const std::string reaver_mayfly_suite_name = name;                                                                                          \
+            static const std::string reaver_mayfly_suite_path_ref = reaver_mayfly_suite_path;                                                                  \
+            static const std::string reaver_mayfly_suite_path =                                                                                                \
+                reaver_mayfly_suite_path_ref.empty() ? reaver_mayfly_suite_name : reaver_mayfly_suite_path_ref + "/" + reaver_mayfly_suite_name;
 
-#define MAYFLY_CONTINUE_SUITE(name)                                                        \
-    namespace { namespace MAYFLY_DETAIL_UNIQUE_NAME { static const std::string reaver_mayfly_suite_name = name;
+#define MAYFLY_CONTINUE_SUITE(name)                                                                                                                            \
+    namespace                                                                                                                                                  \
+    {                                                                                                                                                          \
+        namespace MAYFLY_DETAIL_UNIQUE_NAME                                                                                                                    \
+        {                                                                                                                                                      \
+            static const std::string reaver_mayfly_suite_name = name;
 
-#define MAYFLY_END_SUITE \
-    } }
+#define MAYFLY_END_SUITE                                                                                                                                       \
+    }                                                                                                                                                          \
+    }
 
-#define MAYFLY_ADD_TESTCASE(test, ...) \
-    MAYFLY_ADD_TESTCASE_TO(reaver_mayfly_suite_path, test, __VA_ARGS__)
+#define MAYFLY_ADD_TESTCASE(test, ...) MAYFLY_ADD_TESTCASE_TO(reaver_mayfly_suite_path, test, __VA_ARGS__)
 
-#define MAYFLY_ADD_NEGATIVE_TESTCASE_TO(suite, test, ...)                                                                   \
-    namespace { static ::reaver::mayfly::testcase_registrar MAYFLY_DETAIL_UNIQUE_NAME { suite, ::reaver::mayfly::testcase { \
-        test, __VA_ARGS__, false } }; }
+#define MAYFLY_ADD_NEGATIVE_TESTCASE_TO(suite, test, ...)                                                                                                      \
+    namespace                                                                                                                                                  \
+    {                                                                                                                                                          \
+        static ::reaver::mayfly::testcase_registrar MAYFLY_DETAIL_UNIQUE_NAME{ suite, ::reaver::mayfly::testcase{ test, __VA_ARGS__, false } };                \
+    }
 
-#define MAYFLY_ADD_NEGATIVE_TESTCASE(test, ...) \
-    MAYFLY_ADD_NEGATIVE_TESTCASE_TO(reaver_mayfly_suite_path, test, __VA_ARGS__)
+#define MAYFLY_ADD_NEGATIVE_TESTCASE(test, ...) MAYFLY_ADD_NEGATIVE_TESTCASE_TO(reaver_mayfly_suite_path, test, __VA_ARGS__)
 
-#define MAYFLY_ADD_NEGATIVE_TESTCASE_N_TO(suite, test, N, ...)                                                              \
-    namespace { static ::reaver::mayfly::testcase_registrar MAYFLY_DETAIL_UNIQUE_NAME { suite, ::reaver::mayfly::testcase { \
-        test, __VA_ARGS__, false, N } }; }
+#define MAYFLY_ADD_NEGATIVE_TESTCASE_N_TO(suite, test, N, ...)                                                                                                 \
+    namespace                                                                                                                                                  \
+    {                                                                                                                                                          \
+        static ::reaver::mayfly::testcase_registrar MAYFLY_DETAIL_UNIQUE_NAME{ suite, ::reaver::mayfly::testcase{ test, __VA_ARGS__, false, N } };             \
+    }
 
-#define MAYFLY_ADD_NEGATIVE_TESTCASE_N(test, N, ...) \
-    MAYFLY_ADD_NEGATIVE_TESTCASE_N_TO(reaver_mayfly_suite_path, test, N, __VA_ARGS__)
+#define MAYFLY_ADD_NEGATIVE_TESTCASE_N(test, N, ...) MAYFLY_ADD_NEGATIVE_TESTCASE_N_TO(reaver_mayfly_suite_path, test, N, __VA_ARGS__)
 
 static const std::string reaver_mayfly_suite_name = "";
 static const std::string reaver_mayfly_suite_path = "";

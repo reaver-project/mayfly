@@ -31,7 +31,9 @@
 
 namespace reaver
 {
-    namespace mayfly { inline namespace _v1
+namespace mayfly
+{
+    inline namespace _v1
     {
         class console_reporter : public reporter
         {
@@ -63,13 +65,13 @@ namespace reaver
                         break;
 
                     case testcase_status::failed:
-                        reaver::logger::dlog(reaver::logger::error) << "test failed: `" << result.name << "`, in " << result.duration.count() << "ms." << (description.empty() ? "" : "\nReason: ")
-                            << style::style() << description;
+                        reaver::logger::dlog(reaver::logger::error) << "test failed: `" << result.name << "`, in " << result.duration.count() << "ms."
+                                                                    << (description.empty() ? "" : "\nReason: ") << style::style() << description;
                         break;
 
                     case testcase_status::crashed:
-                        reaver::logger::dlog(reaver::logger::error) << "test crashed: `" << result.name << "`, in " << result.duration.count() << "ms." << (description.empty() ? "" : "\nReason: ")
-                            << style::style() << description;
+                        reaver::logger::dlog(reaver::logger::error) << "test crashed: `" << result.name << "`, in " << result.duration.count() << "ms."
+                                                                    << (description.empty() ? "" : "\nReason: ") << style::style() << description;
                         break;
 
                     case testcase_status::timed_out:
@@ -114,8 +116,7 @@ namespace reaver
                             ++timed_out;
                             break;
 
-                        default:
-                            ;
+                        default:;
                     }
                 }
 
@@ -139,17 +140,18 @@ namespace reaver
 
                 if (summary.passed)
                 {
-                    reaver::logger::dlog() << green << "Passed" <<  white << ":    " << to_string_width(summary.passed, width) << " / " << summary.total;
+                    reaver::logger::dlog() << green << "Passed" << white << ":    " << to_string_width(summary.passed, width) << " / " << summary.total;
                 }
 
                 if (summary.total - summary.passed - crashed - timed_out)
                 {
-                    reaver::logger::dlog() << red << "Failed" <<  white << ":    " << to_string_width(summary.total - summary.passed - crashed - timed_out, width) << " / " << summary.total;
+                    reaver::logger::dlog() << red << "Failed" << white << ":    "
+                                           << to_string_width(summary.total - summary.passed - crashed - timed_out, width) << " / " << summary.total;
                 }
 
                 if (crashed)
                 {
-                    reaver::logger::dlog() << red << "Crashed" <<  white << ":   " << to_string_width(crashed, width) << " / " << summary.total;
+                    reaver::logger::dlog() << red << "Crashed" << white << ":   " << to_string_width(crashed, width) << " / " << summary.total;
                 }
 
                 if (timed_out)
@@ -162,5 +164,6 @@ namespace reaver
         };
 
         MAYFLY_REPORTER_REGISTER("console", console_reporter)
-    }}
+    }
+}
 }

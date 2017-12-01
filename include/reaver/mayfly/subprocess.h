@@ -24,14 +24,16 @@
 
 #include <boost/algorithm/string.hpp>
 
-#include "testcase.h"
-#include "suite.h"
-#include "reporter.h"
 #include "detail/atexit.h"
+#include "reporter.h"
+#include "suite.h"
+#include "testcase.h"
 
 namespace reaver
 {
-    namespace mayfly { inline namespace _v1
+namespace mayfly
+{
+    inline namespace _v1
     {
         class subprocess_reporter : public reporter
         {
@@ -86,5 +88,6 @@ namespace reaver
         };
 
         MAYFLY_REPORTER_REGISTER("subprocess", subprocess_reporter)
-    }}
+    }
+}
 }

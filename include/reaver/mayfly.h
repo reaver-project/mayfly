@@ -22,8 +22,8 @@
 
 #pragma once
 
+#include "mayfly/asserts.h"
 #include "mayfly/detail/atexit.h"
+#include "mayfly/reporter.h"
 #include "mayfly/suite.h"
 #include "mayfly/testcase.h"
-#include "mayfly/reporter.h"
-#include "mayfly/asserts.h"

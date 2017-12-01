@@ -22,13 +22,15 @@
 
 #pragma once
 
+#include <atomic>
 #include <cstdlib>
 #include <vector>
-#include <atomic>
 
 namespace reaver
 {
-    namespace mayfly { inline namespace _v1
+namespace mayfly
+{
+    inline namespace _v1
     {
         namespace _detail
         {
@@ -56,8 +58,7 @@ namespace reaver
 
                 if (!executed)
                 {
-                    std::atexit([]
-                    {
+                    std::atexit([] {
                         auto & registry = _default_atexit_registry();
 
                         for (auto it = registry._functions.rbegin(); it != registry._functions.rend(); ++it)
@@ -74,5 +75,6 @@ namespace reaver
 
             static auto & _ = _default_atexit_registry();
         }
-    }}
+    }
+}
 }

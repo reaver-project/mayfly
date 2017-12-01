@@ -25,8 +25,7 @@
 MAYFLY_BEGIN_SUITE("registration");
 MAYFLY_BEGIN_SUITE("registration of tests and suites");
 
-MAYFLY_ADD_TESTCASE("top-level suite", []
-{
+MAYFLY_ADD_TESTCASE("top-level suite", [] {
     reaver::mayfly::suite_registry registry;
     const std::vector<reaver::mayfly::suite> & suites = registry;
 
@@ -35,8 +34,7 @@ MAYFLY_ADD_TESTCASE("top-level suite", []
     MAYFLY_REQUIRE(suites[0].name() == "foobar");
 });
 
-MAYFLY_ADD_TESTCASE("duplicate suite", []
-{
+MAYFLY_ADD_TESTCASE("duplicate suite", [] {
     reaver::mayfly::suite_registry registry;
     const std::vector<reaver::mayfly::suite> & suites = registry;
 
@@ -46,8 +44,7 @@ MAYFLY_ADD_TESTCASE("duplicate suite", []
     MAYFLY_REQUIRE(suites[0].name() == "foobar");
 });
 
-MAYFLY_ADD_TESTCASE("nested suite", []
-{
+MAYFLY_ADD_TESTCASE("nested suite", [] {
     reaver::mayfly::suite_registry registry;
     const std::vector<reaver::mayfly::suite> & suites = registry;
 
@@ -68,30 +65,27 @@ MAYFLY_ADD_TESTCASE("nested suite", []
     MAYFLY_REQUIRE(mid_level.suites()[0].name() == "fizzbuzz");
 });
 
-MAYFLY_ADD_TESTCASE("nested suite without existing parent", []
-{
+MAYFLY_ADD_TESTCASE("nested suite without existing parent", [] {
     reaver::mayfly::suite_registry registry;
     MAYFLY_REQUIRE_THROWS_TYPE(reaver::mayfly::unknown_parent, registry.add({ "foobaz" }, "foobar"));
 });
 
-MAYFLY_ADD_TESTCASE("test case", []
-{
+MAYFLY_ADD_TESTCASE("test case", [] {
     reaver::mayfly::suite_registry registry;
     const std::vector<reaver::mayfly::suite> & suites = registry;
 
-    registry.add({ "foobar"});
-    MAYFLY_REQUIRE_NOTHROW(registry.add("foobar", { "foobaz", []{} }));
+    registry.add({ "foobar" });
+    MAYFLY_REQUIRE_NOTHROW(registry.add("foobar", { "foobaz", [] {} }));
     MAYFLY_REQUIRE(suites[0].begin()->name() == "foobaz");
 
     registry.add({ "fizzbuzz" }, "foobar");
-    MAYFLY_REQUIRE_NOTHROW(registry.add("foobar/fizzbuzz", { "barfoo", []{} }));
+    MAYFLY_REQUIRE_NOTHROW(registry.add("foobar/fizzbuzz", { "barfoo", [] {} }));
     MAYFLY_REQUIRE(suites[0].suites()[0].begin()->name() == "barfoo");
 });
 
-MAYFLY_ADD_TESTCASE("test case without existing parent", []
-{
+MAYFLY_ADD_TESTCASE("test case without existing parent", [] {
     reaver::mayfly::suite_registry registry;
-    MAYFLY_REQUIRE_THROWS_TYPE(reaver::mayfly::unknown_suite, registry.add("foobar", { "barfoo", []{} }));
+    MAYFLY_REQUIRE_THROWS_TYPE(reaver::mayfly::unknown_suite, registry.add("foobar", { "barfoo", [] {} }));
 });
 
 MAYFLY_END_SUITE;

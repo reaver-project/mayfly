@@ -22,12 +22,12 @@
 
 #pragma once
 
-#include <string>
 #include <functional>
-#include <vector>
-#include <mutex>
 #include <memory>
+#include <mutex>
+#include <string>
 #include <unordered_map>
+#include <vector>
 
 #include <reaver/exception.h>
 
@@ -35,7 +35,9 @@
 
 namespace reaver
 {
-    namespace mayfly { inline namespace _v1
+namespace mayfly
+{
+    inline namespace _v1
     {
         class suite;
         class testcase;
@@ -103,7 +105,7 @@ namespace reaver
 
             virtual void suite_finished(const suite & s) const override
             {
-                for (const auto & r :  _reporters)
+                for (const auto & r : _reporters)
                 {
                     r.get().suite_finished(s);
                 }
@@ -169,8 +171,12 @@ namespace reaver
                 reporter_registry().emplace(std::move(name), std::unique_ptr<reporter>{ registrant });
             }
         };
-    }}
+    }
+}
 }
 
-#define MAYFLY_REPORTER_REGISTER(name, ...)                                                                  \
-    namespace { static ::reaver::mayfly::reporter_registrar MAYFLY_DETAIL_UNIQUE_NAME { name, new __VA_ARGS__() }; }
+#define MAYFLY_REPORTER_REGISTER(name, ...)                                                                                                                    \
+    namespace                                                                                                                                                  \
+    {                                                                                                                                                          \
+        static ::reaver::mayfly::reporter_registrar MAYFLY_DETAIL_UNIQUE_NAME{ name, new __VA_ARGS__() };                                                      \
+    }

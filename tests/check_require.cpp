@@ -25,37 +25,27 @@
 MAYFLY_BEGIN_SUITE("assertions");
 MAYFLY_BEGIN_SUITE("basic assertions");
 
-MAYFLY_ADD_TESTCASE("check", []
-{
+MAYFLY_ADD_TESTCASE("check", [] {
     MAYFLY_CHECK(0 == 0);
     MAYFLY_CHECK(100 == 20 + 80);
     MAYFLY_CHECK(!(false == true));
 });
 
-MAYFLY_ADD_TESTCASE("require", []
-{
+MAYFLY_ADD_TESTCASE("require", [] {
     MAYFLY_REQUIRE(0 == 0);
     MAYFLY_REQUIRE(!(0 == 1));
 });
 
-MAYFLY_ADD_NEGATIVE_TESTCASE("failing check", []
-{
-    MAYFLY_CHECK(0 == 1);
-});
+MAYFLY_ADD_NEGATIVE_TESTCASE("failing check", [] { MAYFLY_CHECK(0 == 1); });
 
-MAYFLY_ADD_NEGATIVE_TESTCASE("failing require", []
-{
-    MAYFLY_REQUIRE(0 == 1);
-});
+MAYFLY_ADD_NEGATIVE_TESTCASE("failing require", [] { MAYFLY_REQUIRE(0 == 1); });
 
-MAYFLY_ADD_NEGATIVE_TESTCASE_N("multiple failing checks", 2, []
-{
+MAYFLY_ADD_NEGATIVE_TESTCASE_N("multiple failing checks", 2, [] {
     MAYFLY_CHECK(0 == 1);
     MAYFLY_CHECK(1 == 2);
 });
 
-MAYFLY_ADD_NEGATIVE_TESTCASE_N("multiple failing requires", 1, []
-{
+MAYFLY_ADD_NEGATIVE_TESTCASE_N("multiple failing requires", 1, [] {
     MAYFLY_REQUIRE(0 == 1);
     MAYFLY_REQUIRE(1 == 2);
 });

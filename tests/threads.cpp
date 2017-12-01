@@ -24,15 +24,13 @@
 
 MAYFLY_BEGIN_SUITE("threads support");
 
-MAYFLY_ADD_NEGATIVE_TESTCASE_N("multithreaded assertions", 1, []()
-{
+MAYFLY_ADD_NEGATIVE_TESTCASE_N("multithreaded assertions", 1, []() {
     MAYFLY_MAIN_THREAD;
 
-    std::thread{ [&](){
+    std::thread{ [&]() {
         MAYFLY_THREAD;
         MAYFLY_CHECK(false);
-    }}.join();
+    } }.join();
 });
 
 MAYFLY_END_SUITE;
-

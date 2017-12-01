@@ -23,8 +23,8 @@
 #pragma once
 
 #include <stdexcept>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
 #include <boost/optional.hpp>
 
@@ -32,7 +32,9 @@
 
 namespace reaver
 {
-    namespace mayfly { inline namespace _v1
+namespace mayfly
+{
+    inline namespace _v1
     {
         class assertions_failed : public std::runtime_error
         {
@@ -53,8 +55,11 @@ namespace reaver
         class expected_failure : public std::runtime_error
         {
         public:
-            expected_failure(std::size_t count, std::size_t failed, std::string asserts) : std::runtime_error{ "negative test conditions not met" + (count ? " (" + std::to_string(count) +
-                " assertions expected to fail, " : " (") + std::to_string(failed) + " assertions failed); " + asserts }
+            expected_failure(std::size_t count, std::size_t failed, std::string asserts)
+                : std::runtime_error{ "negative test conditions not met" + (count ? " (" + std::to_string(count) + " assertions expected to fail, " : " (")
+                      + std::to_string(failed)
+                      + " assertions failed); "
+                      + asserts }
             {
             }
         };
@@ -190,62 +195,146 @@ namespace reaver
 
             logger->log(std::move(description), critical);
         }
-    }}
+    }
+}
 }
 
-#define MAYFLY_REQUIRE(...)                                                                                           \
-    try { if (!(__VA_ARGS__)) { ::reaver::mayfly::log_assertion(::std::string{ #__VA_ARGS__ }                         \
-        + " (in " + __FILE__ + " at line " + ::std::to_string(__LINE__) + ")", true); } }                             \
-    catch (::reaver::mayfly::expected_failure_exit &) { throw; }                                                      \
-    catch (::reaver::mayfly::assertions_failed &) { throw; }                                                          \
-    catch (...) { ::reaver::mayfly::log_assertion(::std::string{ #__VA_ARGS__ " has thrown an unexpected exception" } \
-        + " (in " + __FILE__ + " at line " + ::std::to_string(__LINE__) + ")", true); }
+#define MAYFLY_REQUIRE(...)                                                                                                                                    \
+    try                                                                                                                                                        \
+    {                                                                                                                                                          \
+        if (!(__VA_ARGS__))                                                                                                                                    \
+        {                                                                                                                                                      \
+            ::reaver::mayfly::log_assertion(::std::string{ #__VA_ARGS__ } + " (in " + __FILE__ + " at line " + ::std::to_string(__LINE__) + ")", true);        \
+        }                                                                                                                                                      \
+    }                                                                                                                                                          \
+    catch (::reaver::mayfly::expected_failure_exit &)                                                                                                          \
+    {                                                                                                                                                          \
+        throw;                                                                                                                                                 \
+    }                                                                                                                                                          \
+    catch (::reaver::mayfly::assertions_failed &)                                                                                                              \
+    {                                                                                                                                                          \
+        throw;                                                                                                                                                 \
+    }                                                                                                                                                          \
+    catch (...)                                                                                                                                                \
+    {                                                                                                                                                          \
+        ::reaver::mayfly::log_assertion(                                                                                                                       \
+            ::std::string{ #__VA_ARGS__ " has thrown an unexpected exception" } + " (in " + __FILE__ + " at line " + ::std::to_string(__LINE__) + ")", true);  \
+    }
 
-#define MAYFLY_CHECK(...)                                                                                             \
-    try { if (!(__VA_ARGS__)) { ::reaver::mayfly::log_assertion(::std::string{ #__VA_ARGS__ }                         \
-        + " (in " + __FILE__ + " at line " + ::std::to_string(__LINE__) + ")"); } }                                   \
-    catch (::reaver::mayfly::expected_failure_exit) { throw; }                                                        \
-    catch (...) { ::reaver::mayfly::log_assertion(::std::string{ #__VA_ARGS__ " has thrown an unexpected exception" } \
-        + " (in " + __FILE__ + " at line " + ::std::to_string(__LINE__) + ")", true); }
+#define MAYFLY_CHECK(...)                                                                                                                                      \
+    try                                                                                                                                                        \
+    {                                                                                                                                                          \
+        if (!(__VA_ARGS__))                                                                                                                                    \
+        {                                                                                                                                                      \
+            ::reaver::mayfly::log_assertion(::std::string{ #__VA_ARGS__ } + " (in " + __FILE__ + " at line " + ::std::to_string(__LINE__) + ")");              \
+        }                                                                                                                                                      \
+    }                                                                                                                                                          \
+    catch (::reaver::mayfly::expected_failure_exit)                                                                                                            \
+    {                                                                                                                                                          \
+        throw;                                                                                                                                                 \
+    }                                                                                                                                                          \
+    catch (...)                                                                                                                                                \
+    {                                                                                                                                                          \
+        ::reaver::mayfly::log_assertion(                                                                                                                       \
+            ::std::string{ #__VA_ARGS__ " has thrown an unexpected exception" } + " (in " + __FILE__ + " at line " + ::std::to_string(__LINE__) + ")", true);  \
+    }
 
-#define MAYFLY_REQUIRE_THROWS(...)                                                                                     \
-    try { __VA_ARGS__; ::reaver::mayfly::log_assertion(::std::string{ #__VA_ARGS__ " should have thrown, but didn't" } \
-        + " (in " + __FILE__ + " at line " + ::std::to_string(__LINE__) + ")", true); }                                \
-    catch (::reaver::mayfly::assertions_failed & ex) { throw; }                                                        \
-    catch (...) {}
+#define MAYFLY_REQUIRE_THROWS(...)                                                                                                                             \
+    try                                                                                                                                                        \
+    {                                                                                                                                                          \
+        __VA_ARGS__;                                                                                                                                           \
+        ::reaver::mayfly::log_assertion(                                                                                                                       \
+            ::std::string{ #__VA_ARGS__ " should have thrown, but didn't" } + " (in " + __FILE__ + " at line " + ::std::to_string(__LINE__) + ")", true);      \
+    }                                                                                                                                                          \
+    catch (::reaver::mayfly::assertions_failed & ex)                                                                                                           \
+    {                                                                                                                                                          \
+        throw;                                                                                                                                                 \
+    }                                                                                                                                                          \
+    catch (...)                                                                                                                                                \
+    {                                                                                                                                                          \
+    }
 
-#define MAYFLY_CHECK_THROWS(...)                                                                                      \
-    try { __VA_ARGS__; ::reaver::mayfly::log_assertion(::std::string{ #__VA_ARGS__ " should have thrown, but didn't"} \
-        + " (in " + __FILE__ + " at line " + ::std::to_string(__LINE__) + ")"); } catch (...) {}
+#define MAYFLY_CHECK_THROWS(...)                                                                                                                               \
+    try                                                                                                                                                        \
+    {                                                                                                                                                          \
+        __VA_ARGS__;                                                                                                                                           \
+        ::reaver::mayfly::log_assertion(                                                                                                                       \
+            ::std::string{ #__VA_ARGS__ " should have thrown, but didn't" } + " (in " + __FILE__ + " at line " + ::std::to_string(__LINE__) + ")");            \
+    }                                                                                                                                                          \
+    catch (...)                                                                                                                                                \
+    {                                                                                                                                                          \
+    }
 
-#define MAYFLY_REQUIRE_THROWS_TYPE(type, ...)                                                                                                   \
-    try { __VA_ARGS__; ::reaver::mayfly::log_assertion(::std::string{ #__VA_ARGS__ " should have thrown " #type ", but didn't throw anything" } \
-        + " (in " + __FILE__ + " at line " + ::std::to_string(__LINE__) + ")", true); }                                                         \
-    catch (type & e) {}                                                                                                                         \
-    catch (::reaver::mayfly::assertions_failed & ex) { throw; }                                                                                 \
-    catch (...) { ::reaver::mayfly::log_assertion(::std::string{ #__VA_ARGS__ " should have thrown " #type ", but has thrown something else" }  \
-        + " (in " + __FILE__ + " at line " + ::std::to_string(__LINE__) + ")", true); }
+#define MAYFLY_REQUIRE_THROWS_TYPE(type, ...)                                                                                                                  \
+    try                                                                                                                                                        \
+    {                                                                                                                                                          \
+        __VA_ARGS__;                                                                                                                                           \
+        ::reaver::mayfly::log_assertion(::std::string{ #__VA_ARGS__ " should have thrown " #type ", but didn't throw anything" } + " (in " + __FILE__          \
+                + " at line "                                                                                                                                  \
+                + ::std::to_string(__LINE__)                                                                                                                   \
+                + ")",                                                                                                                                         \
+            true);                                                                                                                                             \
+    }                                                                                                                                                          \
+    catch (type & e)                                                                                                                                           \
+    {                                                                                                                                                          \
+    }                                                                                                                                                          \
+    catch (::reaver::mayfly::assertions_failed & ex)                                                                                                           \
+    {                                                                                                                                                          \
+        throw;                                                                                                                                                 \
+    }                                                                                                                                                          \
+    catch (...)                                                                                                                                                \
+    {                                                                                                                                                          \
+        ::reaver::mayfly::log_assertion(::std::string{ #__VA_ARGS__ " should have thrown " #type ", but has thrown something else" } + " (in " + __FILE__      \
+                + " at line "                                                                                                                                  \
+                + ::std::to_string(__LINE__)                                                                                                                   \
+                + ")",                                                                                                                                         \
+            true);                                                                                                                                             \
+    }
 
-#define MAYFLY_CHECK_THROWS_TYPE(type, ...)                                                                                                     \
-    try { __VA_ARGS__; ::reaver::mayfly::log_assertion(::std::string{ #__VA_ARGS__ " should have thrown " #type ", but didn't throw anything" } \
-        + " (in " + __FILE__ + " at line " + ::std::to_string(__LINE__) + ")"); }                                                               \
-    catch (type &) {}                                                                                                                           \
-    catch (...) { ::reaver::mayfly::log_assertion(::std::string{ #__VA_ARGS__ " should have thrown " #type ", but has thrown something else" }  \
-        + " (in " + __FILE__ + " at line " + ::std::to_string(__LINE__) + ")"); }
+#define MAYFLY_CHECK_THROWS_TYPE(type, ...)                                                                                                                    \
+    try                                                                                                                                                        \
+    {                                                                                                                                                          \
+        __VA_ARGS__;                                                                                                                                           \
+        ::reaver::mayfly::log_assertion(::std::string{ #__VA_ARGS__ " should have thrown " #type ", but didn't throw anything" } + " (in " + __FILE__          \
+            + " at line "                                                                                                                                      \
+            + ::std::to_string(__LINE__)                                                                                                                       \
+            + ")");                                                                                                                                            \
+    }                                                                                                                                                          \
+    catch (type &)                                                                                                                                             \
+    {                                                                                                                                                          \
+    }                                                                                                                                                          \
+    catch (...)                                                                                                                                                \
+    {                                                                                                                                                          \
+        ::reaver::mayfly::log_assertion(::std::string{ #__VA_ARGS__ " should have thrown " #type ", but has thrown something else" } + " (in " + __FILE__      \
+            + " at line "                                                                                                                                      \
+            + ::std::to_string(__LINE__)                                                                                                                       \
+            + ")");                                                                                                                                            \
+    }
 
-#define MAYFLY_REQUIRE_NOTHROW(...)                                                                                           \
-    try { __VA_ARGS__; } catch (...) { ::reaver::mayfly::log_assertion(::std::string{ #__VA_ARGS__ " shouldn't have thrown" } \
-        + " (in " + __FILE__ + " at line " + ::std::to_string(__LINE__) + ")", true); }
+#define MAYFLY_REQUIRE_NOTHROW(...)                                                                                                                            \
+    try                                                                                                                                                        \
+    {                                                                                                                                                          \
+        __VA_ARGS__;                                                                                                                                           \
+    }                                                                                                                                                          \
+    catch (...)                                                                                                                                                \
+    {                                                                                                                                                          \
+        ::reaver::mayfly::log_assertion(                                                                                                                       \
+            ::std::string{ #__VA_ARGS__ " shouldn't have thrown" } + " (in " + __FILE__ + " at line " + ::std::to_string(__LINE__) + ")", true);               \
+    }
 
-#define MAYFLY_CHECK_NOTHROW(...)                                                                                             \
-    try { __VA_ARGS__; } catch (...) { ::reaver::mayfly::log_assertion(::std::string{ #__VA_ARGS__ " shouldn't have thrown" } \
-        + " (in " + __FILE__ + " at line " + ::std::to_string(__LINE__) + ")"); }
+#define MAYFLY_CHECK_NOTHROW(...)                                                                                                                              \
+    try                                                                                                                                                        \
+    {                                                                                                                                                          \
+        __VA_ARGS__;                                                                                                                                           \
+    }                                                                                                                                                          \
+    catch (...)                                                                                                                                                \
+    {                                                                                                                                                          \
+        ::reaver::mayfly::log_assertion(                                                                                                                       \
+            ::std::string{ #__VA_ARGS__ " shouldn't have thrown" } + " (in " + __FILE__ + " at line " + ::std::to_string(__LINE__) + ")");                     \
+    }
 
 // multithreaded checks support
 
-#define MAYFLY_MAIN_THREAD \
-    auto _mayfly_main_thread_logger = std::this_thread::get_id()
+#define MAYFLY_MAIN_THREAD auto _mayfly_main_thread_logger = std::this_thread::get_id()
 
-#define MAYFLY_THREAD \
-    ::reaver::mayfly::_detail::_main_test_thread(_mayfly_main_thread_logger)
-
+#define MAYFLY_THREAD ::reaver::mayfly::_detail::_main_test_thread(_mayfly_main_thread_logger)
