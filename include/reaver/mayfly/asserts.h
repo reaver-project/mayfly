@@ -1,7 +1,7 @@
 /**
  * Mayfly License
  *
- * Copyright © 2014-2015 Michał "Griwes" Dominiak
+ * Copyright © 2014-2015, 2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -138,14 +138,14 @@ namespace reaver
                 std::size_t _assertions_to_fail;
             };
 
-            inline boost::optional<_assertions_logger> & _local_assertions_logger(std::thread::id id)
+            inline std::optional<_assertions_logger> & _local_assertions_logger(std::thread::id id)
             {
-                static std::unordered_map<std::thread::id, boost::optional<_assertions_logger>> loggers;
+                static std::unordered_map<std::thread::id, std::optional<_assertions_logger>> loggers;
 
                 return loggers[id];
             }
 
-            inline auto _main_test_thread(boost::optional<std::thread::id> set = {})
+            inline auto _main_test_thread(std::optional<std::thread::id> set = {})
             {
                 static std::unordered_map<std::thread::id, std::thread::id> map;
 

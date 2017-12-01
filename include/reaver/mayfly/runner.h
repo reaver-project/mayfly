@@ -49,7 +49,7 @@ namespace reaver
         class runner
         {
         public:
-            runner(std::size_t threads = 1, std::size_t timeout = 60, boost::optional<std::string> test_name = {}) : _threads{ threads }, _timeout{ timeout}, _test_name{ std::move(test_name) }
+            runner(std::size_t threads = 1, std::size_t timeout = 60, std::optional<std::string> test_name = {}) : _threads{ threads }, _timeout{ timeout}, _test_name{ std::move(test_name) }
             {
             }
 
@@ -77,7 +77,7 @@ namespace reaver
             std::size_t _limit = 0;
             std::size_t _timeout = 60;
 
-            boost::optional<std::string> _test_name;
+            std::optional<std::string> _test_name;
 
             std::atomic<std::uintmax_t> _tests{};
             std::atomic<std::uintmax_t> _passed{};
@@ -90,7 +90,7 @@ namespace reaver
         class subprocess_runner : public runner
         {
         public:
-            subprocess_runner(std::string executable, std::size_t threads = 1, std::size_t timeout = 60, boost::optional<std::string> test_name = {}) : runner{ threads, timeout, std::move(test_name) },
+            subprocess_runner(std::string executable, std::size_t threads = 1, std::size_t timeout = 60, std::optional<std::string> test_name = {}) : runner{ threads, timeout, std::move(test_name) },
                 _executable{ std::move(executable) }
             {
             }
@@ -106,7 +106,7 @@ namespace reaver
                     result.name = std::move(suite_names.back());
                     suite_names.pop_back();
 
-                    boost::optional<const testcase &> t;
+                    const testcase * t = nullptr;
 
                     try
                     {
@@ -121,7 +121,7 @@ namespace reaver
                         {
                             return;
                         }
-                        t = *it;
+                        t = &*it;
                     }
 
                     catch (...)
@@ -418,7 +418,7 @@ namespace reaver
             new_opt_desc(version, void, "version,v", "print version information");
 
             new_opt_ext(tasks, std::size_t, opt_name_desc("tasks,j", "specify the amount of worker threads"); static constexpr type default_value = 1; );
-            new_opt_desc(test, boost::optional<std::string>, "test,t", "specify the test to run");
+            new_opt_desc(test, std::optional<std::string>, "test,t", "specify the test to run");
             new_opt_desc(reporter, std::vector<std::string>, "reporter,r", "select reporters to use");
             new_opt_desc(quiet, void, "quiet,q", "disable reporters");
             new_opt_ext(timeout, std::size_t, opt_name_desc("timeout,l", "specify the timeout for tests (in seconds)"); static constexpr type default_value = 10; );

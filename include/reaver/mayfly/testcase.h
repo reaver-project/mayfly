@@ -1,7 +1,7 @@
 /**
  * Mayfly License
  *
- * Copyright © 2014 Michał "Griwes" Dominiak
+ * Copyright © 2014, 2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -79,7 +79,7 @@ namespace reaver
                     _detail::_local_assertions_logger() = _detail::_assertions_logger{ _positive, _assertions_to_fail };
                     _test();
                     _detail::_local_assertions_logger()->throw_exception();
-                    _detail::_local_assertions_logger() = boost::none;
+                    _detail::_local_assertions_logger() = std::nullopt;
                 }
 
                 catch (expected_failure_exit &)
